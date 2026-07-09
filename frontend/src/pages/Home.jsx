@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
   const [services, setServices] = useState([]);
@@ -84,7 +84,7 @@ const Home = () => {
           serviceTitle: selectedService,
           customerName: formData.customerName || user.name,
           email: formData.email || user.email,
-          phone: formData.phone,       
+          phone: formData.phone,      
           address: formData.address, 
           date: formData.date           
         })
@@ -112,27 +112,6 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans antialiased">
       
-      {/* ─── NAVIGATION BAR ─── */}
-      <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between border-b border-slate-50 sticky top-0 bg-white/80 backdrop-blur-md z-50">
-        <div className="flex items-center">
-          <span className="text-xl font-black tracking-tight text-[#0f172a]">SERVISTA</span>
-        </div>
-        
-        <div className="hidden md:flex items-center gap-8 font-semibold text-slate-500 text-xs uppercase tracking-widest">
-          <Link to="/" className="text-blue-600 hover:text-blue-700 transition-colors">Home</Link>
-          <a href="#services" className="hover:text-slate-900 transition-colors">Services</a>
-          <Link to="/experts" className="hover:text-slate-900 transition-colors">Find Experts</Link>
-          <Link to="/about" className="hover:text-slate-900 transition-colors">About</Link>
-          <Link to="/contactUs" className="hover:text-slate-900 transition-colors">ContactUs</Link>
-          <Link to="/my-bookings" className="hover:text-slate-900 transition-colors">My Bookings</Link>
-        </div>
-        
-        <div className="flex items-center gap-6">
-          <Link to="/login" className="text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors uppercase tracking-wider">Log in</Link>
-          <Link to="/register" className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20">Sign up</Link>
-        </div>
-      </nav>
-
       {/* ─── HERO SECTION ─── */}
       <main className="max-w-7xl mx-auto px-6 py-12 lg:py-20 grid lg:grid-cols-12 gap-12 items-center">
         <div className="lg:col-span-6 space-y-8 text-left">
@@ -259,12 +238,12 @@ const Home = () => {
           <div className="md:col-span-4 space-y-4 text-left">
             <h4 className="text-xs font-black text-blue-500 uppercase tracking-widest">Navigation</h4>
             <div className="grid grid-cols-2 gap-3 text-xs font-semibold text-slate-400">
-              <Link to="/" className="hover:text-white transition-colors"><span>•</span> Home</Link>
-              <a href="#services" className="hover:text-white transition-colors"><span>•</span> Services</a>
-              <Link to="/experts" className="hover:text-white transition-colors"><span>•</span> Find Experts</Link>
-              <Link to="/about" className="hover:text-white transition-colors"><span>•</span> About</Link>
-              <Link to="/contactUs" className="hover:text-white transition-colors"><span>•</span> Contact Us</Link>
-              <Link to="/my-bookings" className="hover:text-white transition-colors"><span>•</span> My Bookings</Link>
+              <span className="cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/')}>• Home</span>
+              <a href="#services" className="hover:text-white transition-colors">• Services</a>
+              <span className="cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/experts')}>• Find Experts</span>
+              <span className="cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/about')}>• About</span>
+              <span className="cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/contactUs')}>• Contact Us</span>
+              <span className="cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/my-bookings')}>• My Bookings</span>
             </div>
           </div>
 
