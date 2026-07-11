@@ -1,6 +1,8 @@
+const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
 const Booking = require('../models/Booking');
+const User = require('../models/User'); 
 
 // 1. POST: Save a new booking tied to a specific user
 router.post('/add', async (req, res) => {
@@ -10,7 +12,6 @@ router.post('/add', async (req, res) => {
     if (!userId) {
       return res.status(400).json({ message: "Authentication error: Missing User ID." });
     }
-
     const newBooking = new Booking({
       userId, 
       serviceTitle, 
@@ -18,12 +19,13 @@ router.post('/add', async (req, res) => {
       email, 
       phone, 
       address, 
-      date
+      date,
+      rating: null // 0 ki jagah null rakhein
     });
-
     await newBooking.save();
     res.status(201).json({ message: "Booking confirmed successfully!" });
   } catch (error) {
+    console.error("Booking Error:", error); 
     res.status(500).json({ message: "Error making booking", error: error.message });
   }
 });
@@ -35,6 +37,19 @@ router.get('/all', async (req, res) => {
     res.status(200).json(bookings);
   } catch (error) {
     res.status(500).json({ message: "Error fetching all bookings", error: error.message });
+  }
+});
+// NEW: Fetch bookings for a specific provider
+router.get('/provider/:providerId', async (req, res) => {
+  try {
+    const { providerId } = req.params;
+    
+    // Yahan check karein ke providerId valid hai ya nahi
+    const bookings = await Booking.find({ providerId: providerId }).sort({ createdAt: -1 });
+    
+    res.status(200).json(bookings);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching provider bookings", error: error.message });
   }
 });
 // 3. PUT: Update booking status and assign provider (For Admin)
@@ -49,7 +64,8 @@ router.put('/update-status/:id', async (req, res) => {
     const updatedBooking = await Booking.findByIdAndUpdate(
       req.params.id,
       updateData,
-      { returnDocument:'after'} 
+      { status: 'Approved', providerId, providerName }, 
+  { new: true } 
     );
 
     if (!updatedBooking) {
@@ -61,110 +77,120 @@ router.put('/update-status/:id', async (req, res) => {
     res.status(500).json({ message: "Update failed", error: error.message });
   }
 });
-// 4. GET: Fetch bookings for a specific customer only (Client History Portal)
+
 router.get('/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const userBookings = await Booking.find({ userId }).sort({ createdAt: -1 });
+    
+    const query = mongoose.Types.ObjectId.isValid(userId) 
+      ? { userId: new mongoose.Types.ObjectId(userId) } 
+      : { customerName: userId };
+
+    const userBookings = await Booking.find(query).sort({ createdAt: -1 });
     res.status(200).json(userBookings);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching your personal bookings", error: error.message });
+    res.status(500).json({ message: "Error", error: error.message });
   }
 });
 
-// 🔥 5. GET: Fetch bookings assigned to a specific service provider
-router.get('/provider/:providerId', async (req, res) => {
-  try {
-    const { providerId } = req.params;
-    // Finds tasks assigned specifically to the logged-in service provider
-    const providerTasks = await Booking.find({ providerId }).sort({ createdAt: -1 });
-    res.status(200).json(providerTasks);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching assigned provider tasks", error: error.message });
-  }
-});
-const User = require('../models/User'); // User model import zaroor check kar lein upar
-
-// 1. CLIENT: SUBMIT NEGOTIATION OFFER
+// 6. CLIENT: SUBMIT NEGOTIATION OFFER
 router.put('/negotiate-offer/:id', async (req, res) => {
-    try {
-        const { proposedPrice } = req.body;
-        const updatedBooking = await Booking.findByIdAndUpdate(
-            req.params.id,
-            { 
-                clientProposedPrice: proposedPrice,
-                status: 'Negotiating' 
-            },
-            { new: true }
-        );
-        res.status(200).json({ message: "Offer submitted successfully!", updatedBooking });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+  try {
+    const { proposedPrice } = req.body;
+    const updatedBooking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { 
+        clientProposedPrice: proposedPrice,
+        status: 'Negotiating' 
+      },
+      { new: true }
+    );
+    res.status(200).json({ message: "Offer submitted successfully!", updatedBooking });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
-// 2. PROVIDER: ACCEPT OR COUNTER THE OFFER
+// 7. PROVIDER: ACCEPT OR COUNTER THE OFFER
 router.put('/respond-offer/:id', async (req, res) => {
-    try {
-        const { action, counterPrice } = req.body; // action: 'Accept' ya 'Counter'
-        
-        let updateData = {};
-        if (action === 'Accept') {
-            const booking = await Booking.findById(req.params.id);
-            updateData = {
-                status: 'Approved',
-                finalPrice: booking.clientProposedPrice // Client ki price lock ho gayi
-            };
-        } else if (action === 'Counter') {
-            updateData = {
-                providerCounterPrice: counterPrice,
-                // Status 'Negotiating' hi rahega jab tak client accept na kare
-            };
-        }
-
-        const updatedBooking = await Booking.findByIdAndUpdate(req.params.id, updateData, { new: true });
-        res.status(200).json({ message: `Offer ${action}ed successfully!`, updatedBooking });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+  try {
+    const { action, counterPrice } = req.body;
+    
+    let updateData = {};
+    if (action === 'Accept') {
+      const booking = await Booking.findById(req.params.id);
+      updateData = {
+        status: 'Approved',
+        finalPrice: booking.clientProposedPrice
+      };
+    } else if (action === 'Counter') {
+      updateData = {
+        providerCounterPrice: counterPrice,
+      };
     }
+
+    const updatedBooking = await Booking.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    res.status(200).json({ message: `Offer ${action}ed successfully!`, updatedBooking });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
-// 3. CLIENT: SUBMIT RATING & REVIEW (Kaam khatam hone ke baad)
-router.put('/rate-booking/:id', async (req, res) => {
-    try {
-        const { rating, reviewText } = req.body;
-        
-        // Booking ko update karein rating ke sath
-        const booking = await Booking.findByIdAndUpdate(
-            req.params.id,
-            { rating, reviewText },
-            { new: true }
-        );
-
-        if (!booking) return res.status(404).json({ message: "Booking not found" });
-
-        // PROVIDER KI AVERAGE RATING CALCULATE KARNA
-        const providerId = booking.providerId;
-        if (providerId) {
-            // Is provider ki saari rated bookings nikalna
-            const allRatedBookings = await Booking.find({ providerId, rating: { $exists: true } });
-            
-            const totalReviews = allRatedBookings.length;
-            const avgRating = allRatedBookings.reduce((sum, b) => sum + b.rating, 0) / totalReviews;
-
-            // Provider ke document mein save karna
-            await User.findByIdAndUpdate(providerId, {
-                averageRating: parseFloat(avgRating.toFixed(1)), // e.g., 4.5
-                totalReviews: totalReviews
-            });
-        }
-
-        res.status(200).json({ message: "Thank you for your feedback!", booking });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+// 8. CLIENT: SUBMIT RATING & REVIEW (Combined both versions)
+router.put('/rate/:id', async (req, res) => {
+  try {
+    const { rating, review } = req.body;
+    
+    // Validation: Sirf tabhi update karein agar rating 1 aur 5 ke beech ho
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ message: "Please provide a valid rating between 1 and 5." });
     }
+
+    const updatedBooking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { rating, review },
+      { new: true }
+    );
+
+    if (!updatedBooking) {
+      return res.status(404).json({ message: "Booking not found!" });
+    }
+
+    res.status(200).json({ message: "Rating submitted successfully!", updatedBooking });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to submit rating", error: error.message });
+  }
 });
-// 6. DELETE: Cancel/Delete a booking (For Client Portal)
+
+// ✨ SUPER PROFESSIONAL ─── CLIENT: RESCHEDULE A BOOKING WITH AUTO-STATUS
+router.put('/reschedule/:id', async (req, res) => {
+  try {
+    const { date } = req.body;
+    
+    if (!date) {
+      return res.status(400).json({ message: "New date is required." });
+    }
+
+    const updatedBooking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { 
+        date: date,
+        status: 'Rescheduled' 
+      },
+      { returnDocument: 'after' }
+    );
+
+    if (!updatedBooking) {
+      return res.status(404).json({ message: "Booking not found!" });
+    }
+
+    return res.status(200).json({ message: "Booking rescheduled successfully!", updatedBooking });
+  } catch (error) {
+    return res.status(500).json({ message: "Reschedule failed", error: error.message });
+  }
+});
+
+// 9. DELETE: Cancel/Delete a booking (For Client Portal)
 router.delete('/cancel/:id', async (req, res) => {
   try {
     const deletedBooking = await Booking.findByIdAndDelete(req.params.id);
@@ -176,4 +202,5 @@ router.delete('/cancel/:id', async (req, res) => {
     res.status(500).json({ message: "Cancellation failed", error: error.message });
   }
 });
+
 module.exports = router;

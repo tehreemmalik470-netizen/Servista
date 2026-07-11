@@ -50,7 +50,7 @@ const ProviderDashboard = () => {
           const completedJobs = data.filter(b => b.status?.toLowerCase() === 'completed');
           setCompletedCount(completedJobs.length);
         }
-        setLoading(false);
+        loading && setLoading(false);
       } catch (error) {
         console.error("Provider dashboard fetch error:", error);
         setLoading(false);
@@ -129,31 +129,31 @@ const ProviderDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-[#111827]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      <div className="flex justify-center items-center h-screen bg-[#F6FAFD]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0A1931]"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#111827] text-gray-100 font-sans antialiased selection:bg-indigo-500/30">
+    <div className="min-h-screen bg-[#F6FAFD] text-[#091F5C] font-sans antialiased selection:bg-blue-200">
       
-      {/* TOP PREMIUM NAVIGATION BAR */}
-      <nav className="bg-[#1f2937]/90 backdrop-blur-md border-b border-gray-700/50 fixed top-0 w-full z-50 shadow-md">
+      {/* TOP PREMIUM NAVIGATION BAR (DARK MODE HIGHLIGHT) */}
+      <nav className="bg-[#0A1931] border-b border-blue-900/40 fixed top-0 w-full z-50 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-3">
-              <span className="text-xl font-black tracking-wider text-indigo-400 uppercase">Servista</span>
-              <span className="text-[10px] bg-gray-700 text-gray-300 font-extrabold px-2 py-0.5 rounded uppercase tracking-widest border border-gray-600">Panel</span>
+              <span className="text-xl font-black tracking-wider text-white uppercase">Servista</span>
+              <span className="text-[10px] bg-[#1e2e4a] text-blue-300 font-extrabold px-2 py-0.5 rounded uppercase tracking-widest border border-blue-800/40">Panel</span>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-bold text-gray-100">{providerName}</p>
-                <p className="text-xs text-gray-400 font-medium capitalize">
+                <p className="text-sm font-bold text-white">{providerName}</p>
+                <p className="text-xs text-blue-300/80 font-medium capitalize">
                   {providerSkill ? `${providerSkill} (${providerRole})` : providerRole}
                 </p>
               </div>
-              <button onClick={handleLogout} className="px-3.5 py-1.5 bg-gray-800 hover:bg-rose-950/40 text-gray-300 hover:text-rose-400 rounded-xl text-xs font-bold transition-all border border-gray-700 hover:border-rose-900/60">
+              <button onClick={handleLogout} className="px-3.5 py-1.5 bg-[#1e2e4a] hover:bg-rose-950/60 text-white hover:text-rose-300 rounded-xl text-xs font-bold transition-all border border-blue-800/40 hover:border-rose-900">
                 Log Out
               </button>
             </div>
@@ -164,32 +164,32 @@ const ProviderDashboard = () => {
       {/* MAIN LAYOUT SPACE */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-12">
         
-        {/* BANNER LAYOUT CONFIGURATION */}
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-[#1f2937] p-6 rounded-2xl border border-gray-700/60 shadow-lg">
+        {/* BANNER LAYOUT CONFIGURATION (DARK MODULE) */}
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-[#0A1931] p-6 rounded-2xl border border-blue-950 shadow-xl text-white">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl font-bold text-white tracking-tight">Welcome back, {providerName}!</h1>
               {providerSkill && (
-                <span className="px-2.5 py-0.5 bg-indigo-950/50 text-indigo-400 text-xs font-bold rounded-md border border-indigo-900/60">
+                <span className="px-2.5 py-0.5 bg-blue-900/40 text-blue-300 text-xs font-bold rounded-md border border-blue-800/50">
                   🛠️ {providerSkill}
                 </span>
               )}
             </div>
-            <p className="text-sm text-gray-400 mt-1.5 flex items-center gap-1.5">
-              <span>📍</span> <span className="font-semibold text-gray-300">Base Workspace Location:</span> 
-              <span className="text-indigo-400 font-medium">{providerAddress}</span>
+            <p className="text-sm text-blue-200/70 mt-1.5 flex items-center gap-1.5">
+              <span>📍</span> <span className="font-semibold text-blue-100">Base Workspace Location:</span> 
+              <span className="text-blue-300 font-medium">{providerAddress}</span>
             </p>
           </div>
 
           {/* DYNAMIC TOGGLE SYSTEM CONTROLLER */}
-          <div className="flex items-center gap-3 bg-[#111827] p-3 rounded-xl border border-gray-700/50 w-fit">
-            <span className={`text-[11px] font-bold uppercase tracking-wider ${isAvailable ? 'text-emerald-400' : 'text-gray-500'}`}>
+          <div className="flex items-center gap-3 bg-[#061022] p-3 rounded-xl border border-blue-900/40 w-fit">
+            <span className={`text-[11px] font-bold uppercase tracking-wider ${isAvailable ? 'text-emerald-400' : 'text-gray-400'}`}>
               {isAvailable ? "● Online / Active " : "○ Currently Offline"}
             </span>
             <button
               onClick={handleToggleAvailability}
               className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${
-                isAvailable ? 'bg-indigo-500 justify-end' : 'bg-gray-700 justify-start'
+                isAvailable ? 'bg-emerald-500 justify-end' : 'bg-gray-600 justify-start'
               }`}
             >
               <div className="bg-white w-4 h-4 rounded-full shadow-lg transform duration-300"></div>
@@ -197,122 +197,132 @@ const ProviderDashboard = () => {
           </div>
         </div>
 
-        {/* INTERACTIVE DATA TRACKING CARDS */}
+        {/* INTERACTIVE DATA TRACKING CARDS (DARK TILES ON LIGHT CANVAS) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           
           <div 
             onClick={() => setActiveTab('Active')}
             className={`p-6 rounded-2xl border cursor-pointer transition-all shadow-md flex items-center justify-between ${
-              activeTab === 'Active' ? 'bg-[#1f2937] border-indigo-500 ring-1 ring-indigo-500/20' : 'bg-[#1f2937] border-gray-700/50 hover:border-gray-600'
+              activeTab === 'Active' ? 'bg-[#0A1931] border-blue-800 text-white ring-2 ring-blue-500/20 shadow-blue-900/10' : 'bg-white border-[#B3CFE5]/60 text-[#091F5C] hover:border-[#4A7FA7]'
             }`}
           >
             <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Active Queue Assignments</p>
-              <h3 className="text-3xl font-black text-white mt-1.5">
+              <p className={`text-xs font-bold uppercase tracking-wider ${activeTab === 'Active' ? 'text-blue-300' : 'text-[#4A7FA7]'}`}>Active Queue Assignments</p>
+              <h3 className={`text-3xl font-black mt-1.5 ${activeTab === 'Active' ? 'text-white' : 'text-[#091F5C]'}`}>
                 {allBookings.filter(b => b.status?.toLowerCase() === 'approved' || b.status?.toLowerCase() === 'pending' || b.status?.toLowerCase() === 'active').length}
               </h3>
-              <span className="text-[11px] text-indigo-400 font-medium mt-1 block">Click to view pipeline stack</span>
+              <span className={`text-[11px] font-medium mt-1 block ${activeTab === 'Active' ? 'text-blue-400' : 'text-[#4A7FA7]'}`}>Click to view pipeline stack</span>
             </div>
-            <div className="p-3 bg-[#111827] text-amber-400 rounded-xl border border-gray-700/50 text-lg">⏳</div>
+            <div className="p-3 bg-[#F6FAFD] rounded-xl border border-[#B3CFE5]/40 text-lg shadow-sm">⏳</div>
           </div>
 
           <div 
             onClick={() => setActiveTab('Completed')}
             className={`p-6 rounded-2xl border cursor-pointer transition-all shadow-md flex items-center justify-between ${
-              activeTab === 'Completed' ? 'bg-[#1f2937] border-indigo-500 ring-1 ring-indigo-500/20' : 'bg-[#1f2937] border-gray-700/50 hover:border-gray-600'
+              activeTab === 'Completed' ? 'bg-[#0A1931] border-blue-800 text-white ring-2 ring-blue-500/20 shadow-blue-900/10' : 'bg-white border-[#B3CFE5]/60 text-[#091F5C] hover:border-[#4A7FA7]'
             }`}
           >
             <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Successful Execution Logs</p>
-              <h3 className="text-3xl font-black text-white mt-1.5">{completedCount}</h3>
-              <span className="text-[11px] text-indigo-400 font-medium mt-1 block">Click to view past workflows</span>
+              <p className={`text-xs font-bold uppercase tracking-wider ${activeTab === 'Completed' ? 'text-blue-300' : 'text-[#4A7FA7]'}`}>Successful Execution Logs</p>
+              <h3 className={`text-3xl font-black mt-1.5 ${activeTab === 'Completed' ? 'text-white' : 'text-[#091F5C]'}`}>{completedCount}</h3>
+              <span className={`text-[11px] font-medium mt-1 block ${activeTab === 'Completed' ? 'text-blue-400' : 'text-[#4A7FA7]'}`}>Click to view past workflows</span>
             </div>
-            <div className="p-3 bg-[#111827] text-emerald-400 rounded-xl border border-gray-700/50 text-lg">🎉</div>
+            <div className="p-3 bg-[#F6FAFD] rounded-xl border border-[#B3CFE5]/40 text-lg shadow-sm">🎉</div>
           </div>
 
           <div 
             onClick={() => setActiveTab('Cancelled')}
             className={`p-6 rounded-2xl border cursor-pointer transition-all shadow-md flex items-center justify-between ${
-              activeTab === 'Cancelled' ? 'bg-[#1f2937] border-indigo-500 ring-1 ring-indigo-500/20' : 'bg-[#1f2937] border-gray-700/50 hover:border-gray-600'
+              activeTab === 'Cancelled' ? 'bg-[#0A1931] border-blue-800 text-white ring-2 ring-blue-500/20 shadow-blue-900/10' : 'bg-white border-[#B3CFE5]/60 text-[#091F5C] hover:border-[#4A7FA7]'
             }`}
           >
             <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Dropped / Void Records</p>
-              <h3 className="text-3xl font-black text-white mt-1.5">
+              <p className={`text-xs font-bold uppercase tracking-wider ${activeTab === 'Cancelled' ? 'text-blue-300' : 'text-[#4A7FA7]'}`}>Dropped / Void Records</p>
+              <h3 className={`text-3xl font-black mt-1.5 ${activeTab === 'Cancelled' ? 'text-white' : 'text-[#091F5C]'}`}>
                 {allBookings.filter(b => b.status?.toLowerCase() === 'cancelled').length}
               </h3>
-              <span className="text-[11px] text-indigo-400 font-medium mt-1 block">Click to view dropouts</span>
+              <span className={`text-[11px] font-medium mt-1 block ${activeTab === 'Cancelled' ? 'text-blue-400' : 'text-[#4A7FA7]'}`}>Click to view dropouts</span>
             </div>
-            <div className="p-3 bg-[#111827] text-rose-400 rounded-xl border border-gray-700/50 text-lg">❌</div>
+            <div className="p-3 bg-[#F6FAFD] rounded-xl border border-[#B3CFE5]/40 text-lg shadow-sm">❌</div>
           </div>
 
         </div>
 
-        {/* ARCHITECTURE TABLE PANEL */}
-        <div className="bg-[#1f2937] rounded-2xl border border-gray-700/60 shadow-xl overflow-hidden">
-          <div className="p-5 border-b border-gray-700/60 bg-[#1f2937] flex justify-between items-center">
-            <h2 className="font-bold text-gray-200 text-sm tracking-wide">
-              Pipeline Operational Registry — <span className="text-indigo-400 uppercase font-extrabold">{activeTab}</span>
+        {/* ARCHITECTURE TABLE PANEL (CLEAN LIGHT DESIGN WITH SUBTLE CONTRASTS) */}
+        <div className="bg-white rounded-2xl border border-[#B3CFE5]/60 shadow-xl overflow-hidden">
+          <div className="p-5 border-b border-[#B3CFE5]/60 bg-white flex justify-between items-center">
+            <h2 className="font-bold text-[#091F5C] text-sm tracking-wide">
+              Pipeline Operational Registry — <span className="text-[#4A7FA7] uppercase font-extrabold">{activeTab}</span>
             </h2>
-            <span className="px-2.5 py-0.5 bg-[#111827] text-gray-400 text-[10px] font-bold rounded border border-gray-700 uppercase tracking-wider">Live Cache Connected</span>
+            <span className="px-2.5 py-0.5 bg-[#F6FAFD] text-[#4A7FA7] text-[10px] font-bold rounded border border-[#B3CFE5] uppercase tracking-wider">Live Cache Connected</span>
           </div>
 
           <div className="overflow-x-auto">
             {filteredBookings.length === 0 ? (
-              <div className="p-16 text-center">
+              <div className="p-16 text-center bg-white">
                 <div className="text-2xl mb-2">📥</div>
-                <p className="text-sm font-semibold text-gray-400">No matching pipeline context entries found</p>
-                <p className="text-xs text-gray-500 mt-1">Currently clear of administrative service dispatch operations.</p>
+                <p className="text-sm font-semibold text-[#091F5C]">No matching pipeline context entries found</p>
+                <p className="text-xs text-[#4A7FA7] mt-1">Currently clear of administrative service dispatch operations.</p>
               </div>
             ) : (
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-[#111827] text-gray-400 font-bold text-xs uppercase tracking-wider border-b border-gray-700/50">
-                    <th className="p-4 pl-6">Client Identity</th>
-                    <th className="p-4">Service Scope</th>
-                    <th className="p-4">Execution Target Address</th>
-                    <th className="p-4">Schedule Frame</th>
-                    <th className="p-4 pr-6 text-center">Operation Control</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-700/40 text-sm font-medium text-gray-300">
-                  {filteredBookings.map((booking) => (
-                    <tr key={booking._id || booking.id} className="hover:bg-[#111827]/40 transition-colors">
-                      <td className="p-4 pl-6">
-                        <div className="font-bold text-white">{booking.customerName || 'Customer'}</div>
-                        <div className="text-xs text-gray-500 font-normal mt-0.5">{booking.phone || 'N/A'}</div>
-                      </td>
-                      <td className="p-4">
-                        <span className="px-2.5 py-0.5 bg-[#111827] text-gray-300 rounded text-xs border border-gray-700">
-                          {booking.serviceTitle}
-                        </span>
-                      </td>
-                      <td className="p-4 max-w-xs truncate text-gray-400 font-normal" title={booking.address}>
-                        {booking.address}
-                      </td>
-                      <td className="p-4 text-gray-400 font-normal">
-                        {booking.date ? new Date(booking.date).toLocaleDateString('en-GB') : 'Recent'}
-                      </td>
-                      <td className="p-4 pr-6 text-center">
-                        {activeTab === 'Active' ? (
-                          <button
-                            onClick={() => handleCompleteBooking(booking._id || booking.id)}
-                            className="px-4 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-xs font-bold shadow-md shadow-indigo-950/20 transition active:scale-95"
-                          >
-                            Complete Task
-                          </button>
-                        ) : (
-                          <span className={`px-2.5 py-0.5 rounded text-[11px] font-bold uppercase border ${
-                            activeTab === 'Completed' ? 'bg-emerald-950/30 text-emerald-400 border-emerald-900/50' : 'bg-rose-950/30 text-rose-400 border-rose-900/50'
-                          }`}>
-                            {booking.status}
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              // ProviderDashboard.jsx ka table section is tarah rakhein:
+
+<table className="w-full text-left border-collapse">
+  <thead>
+    <tr className="bg-[#F6FAFD] text-[#4A7FA7] font-bold text-xs uppercase tracking-wider border-b border-[#B3CFE5]/60">
+      <th className="p-4 pl-6">Client Identity</th>
+      <th className="p-4">Service Scope</th>
+      <th className="p-4">Execution Target Address</th>
+      <th className="p-4">Schedule Frame</th>
+      <th className="p-4 text-center">Client Rating</th>
+      <th className="p-4 pr-6 text-center">Operation Control</th>
+    </tr>
+  </thead>
+  <tbody className="divide-y divide-[#B3CFE5]/30 text-sm font-medium text-[#091F5C]">
+    {filteredBookings.map((booking) => (
+      <tr key={booking._id || booking.id} className="hover:bg-[#F6FAFD]/60 transition-colors">
+        <td className="p-4 pl-6">
+          <div className="flex flex-col gap-1">
+            <span className="font-bold text-[#091F5C]">{booking.customerName || 'Customer'}</span>
+          </div>
+        </td>
+        <td className="p-4">
+          <span className="px-2.5 py-0.5 bg-[#F6FAFD] text-[#0A1931] rounded text-xs border border-[#B3CFE5]">
+            {booking.serviceTitle}
+          </span>
+        </td>
+        <td className="p-4 text-gray-600 font-normal">{booking.address}</td>
+        <td className="p-4 text-gray-600 font-normal">
+          {booking.date ? new Date(booking.date).toLocaleDateString('en-GB') : 'Recent'}
+        </td>
+        
+        {/* Rating Column */}
+        <td className="p-4 text-center font-bold">
+          {booking.rating ? (
+            <span className="text-amber-500 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
+              ⭐ {booking.rating}/5
+            </span>
+          ) : (
+            <span className="text-gray-400 text-xs italic">-</span>
+          )}
+        </td>
+
+        <td className="p-4 pr-6 text-center">
+          {activeTab === 'Active' ? (
+            <button
+              onClick={() => handleCompleteBooking(booking._id || booking.id)}
+              className="px-4 py-1.5 bg-[#0A1931] hover:bg-[#1A3D63] text-white rounded-lg text-xs font-bold transition active:scale-95"
+            >
+              Complete
+            </button>
+          ) : (
+            <span className="text-xs font-bold uppercase">{booking.status}</span>
+          )}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
             )}
           </div>
         </div>
