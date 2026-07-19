@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-
+import { CartContext } from '../context/CartContext';
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState(null);
+  const { cart } = useContext(CartContext);
 
   // Check login status on component mount and route change
   useEffect(() => {
@@ -64,7 +65,16 @@ const Navbar = () => {
         <Link to="/experts" className={`${location.pathname === '/experts' ? 'text-blue-600' : 'hover:text-slate-900'} transition-colors`}>Find Experts</Link>
         <Link to="/about" className={`${location.pathname === '/about' ? 'text-blue-600' : 'hover:text-slate-900'} transition-colors`}>About</Link>
         <Link to="/contactUs" className={`${location.pathname === '/contactUs' ? 'text-blue-600' : 'hover:text-slate-900'} transition-colors`}>ContactUs</Link>
-        
+        <Link to="/cart" className="relative flex items-center gap-1 font-semibold text-slate-800 hover:text-blue-600 transition-colors">
+  My Cart
+  
+  {/* Agar cart mein koi item hai toh yeh chota sa badge show hoga */}
+  {cart && cart.length > 0 && (
+    <span className="absolute -top-3 -right-4 bg-[#e65a3f] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+      {cart.length}
+    </span>
+  )}
+</Link>
         {/* Customer Only Links - Hidden from Admin and Provider */}
         {!isAdmin && !isProvider && (
           <Link to="/my-bookings" className={`${location.pathname === '/my-bookings' ? 'text-blue-600' : 'hover:text-slate-900'} transition-colors`}>

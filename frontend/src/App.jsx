@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar'; 
+import Footer from './components/Footer';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -14,6 +15,8 @@ import About from './pages/About';
 import ContactUs from './pages/ContactUs';
 import Services from './pages/Services'; 
 import SubServices from './pages/SubServices';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
 // App.jsx
 import Cleaning from './pages/Cleaning';
 import Plumbing from './pages/Plumbing';
@@ -25,11 +28,10 @@ import Paintdecor from './pages/Paint-decor';
 import Carpenter from './pages/Carpenter';
 import ACRepairing from './pages/ACRepairing';
 
-
-
 function App() {
   return (
     <Router>
+      <div>
       <Navbar />
       <Routes>
         {/* Public Routes */}
@@ -49,31 +51,27 @@ function App() {
 <Route path="/shifting" element={<Shifting/>} />
 <Route path="/paint-decor" element={<Paint-decor/>} />
 <Route path="/carpenter" element={<Carpenter/>} />
-
-
-
-
         {/* PROTECTED ROUTES LAYER */}
         <Route element={<ProtectedRoute />}>
           {/* General Protected Routes (Sirf Token chahiye) */}
           <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/provider-profiles" element={<ProviderProfiles />} />
           <Route path="/experts" element={<ProviderProfiles />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
         </Route>
-
         {/* ADMIN SPECIFIC ROUTES */}
         <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
         </Route>
-
         {/* PROVIDER SPECIFIC ROUTES */}
         <Route element={<ProtectedRoute allowedRoles={['provider']} />}>
           <Route path="/provider-dashboard" element={<ProviderDashboard />} />
         </Route>
-
       </Routes>
+      <Footer /> {/* 2. Yahan Footer dal dein */}
+    </div>
     </Router>
   );
 }
-
 export default App;

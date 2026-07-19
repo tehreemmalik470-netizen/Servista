@@ -247,61 +247,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
-      {/* ─── CLEAN PREMIUM FOOTER ─── */}
-      <footer className="bg-slate-950 text-white pt-16 pb-8 px-6 border-t border-slate-900">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 border-b border-slate-900">
-          
-          <div className="md:col-span-5 space-y-4 text-left">
-            <span className="text-xl font-black tracking-tight text-white block">SERVISTA</span>
-            <p className="text-slate-400 text-xs font-medium leading-relaxed max-w-sm">
-              Sialkot's premium on-demand digital platform connecting verified technicians seamlessly.
-            </p>
-          </div>
-
-          <div className="md:col-span-4 space-y-4 text-left">
-            <h4 className="text-xs font-black text-blue-500 uppercase tracking-widest">Navigation</h4>
-            <div className="grid grid-cols-2 gap-3 text-xs font-semibold text-slate-400">
-              <span className="cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/')}>• Home</span>
-              <a href="#services" className="hover:text-white transition-colors">• Services</a>
-              <span className="cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/experts')}>• Find Experts</span>
-              <span className="cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/about')}>• About</span>
-              <span className="cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/contactUs')}>• Contact Us</span>
-              <span className="cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/my-bookings')}>• My Bookings</span>
-            </div>
-          </div>
-
-          <div className="md:col-span-3 space-y-4 text-left">
-            <h4 className="text-xs font-black text-blue-500 uppercase tracking-widest">Support</h4>
-            
-            <div className="space-y-4 pt-1">
-              <div className="flex items-start gap-3 text-slate-400">
-                <span className="text-blue-500 text-base font-bold mt-0.5">📍</span>
-                <div className="text-xs font-medium">
-                  <span className="block text-slate-500 font-bold uppercase text-[10px] tracking-wider">Office Location</span>
-                  Shahabpura Road, Sialkot
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 text-slate-300">
-                <span className="text-emerald-500 text-base font-bold mt-0.5">✉️</span>
-                <div className="text-xs font-semibold">
-                  <span className="block text-slate-500 font-bold uppercase text-[10px] tracking-wider">Email Address</span>
-                  <a href="mailto:support@servista.com" className="text-slate-200 hover:text-emerald-400 transition-colors">
-                    support@servista.com
-                  </a>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-500 text-[11px] font-bold uppercase tracking-wider text-left">
-          <p>© 2026 SERVISTA Co. All rights reserved.</p>
-        </div>
-      </footer>
-
       {/* ─── BOOKING MODAL POPUP ─── */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">

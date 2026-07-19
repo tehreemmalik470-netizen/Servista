@@ -1,7 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Footer from '../components/Footer'; // <--- Universal Footer Component Import kiya hai
-
 const About = () => {
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans antialiased flex flex-col justify-between">
@@ -92,8 +90,7 @@ const About = () => {
         </section>
       </div>
 
-      {/* Branded Template Footer component calling here */}
-      <Footer />
+  
       
     </div>
   );

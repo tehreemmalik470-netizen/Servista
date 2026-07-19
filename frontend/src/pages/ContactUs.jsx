@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Footer from '../components/Footer';
 
 const ContactUs = () => {
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
@@ -119,9 +118,6 @@ const ContactUs = () => {
 
         </div>
       </div>
-      
-      {/* Universal Footer Integration */}
-      <Footer />
     </div>
   );
 };
