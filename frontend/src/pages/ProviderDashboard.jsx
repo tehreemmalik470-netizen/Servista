@@ -50,7 +50,7 @@ const ProviderDashboard = () => {
           const completedJobs = data.filter(b => b.status?.toLowerCase() === 'completed');
           setCompletedCount(completedJobs.length);
         }
-        loading && setLoading(false);
+        setLoading(false);
       } catch (error) {
         console.error("Provider dashboard fetch error:", error);
         setLoading(false);
@@ -65,15 +65,17 @@ const ProviderDashboard = () => {
   useEffect(() => {
     let dataset = [];
     if (activeTab === 'Active') {
-      dataset = allBookings.filter(b => 
-        b.status?.toLowerCase() === 'approved' || 
-        b.status?.toLowerCase() === 'pending' || 
-        b.status?.toLowerCase() === 'active'
-      );
+      dataset = allBookings.filter(b => {
+        const s = b.status?.toLowerCase();
+        return s === 'approved' || s === 'pending' || s === 'active';
+      });
     } else if (activeTab === 'Completed') {
       dataset = allBookings.filter(b => b.status?.toLowerCase() === 'completed');
     } else if (activeTab === 'Cancelled') {
-      dataset = allBookings.filter(b => b.status?.toLowerCase() === 'cancelled');
+      dataset = allBookings.filter(b => {
+        const s = b.status?.toLowerCase();
+        return s === 'cancelled' || s === 'rejected';
+      });
     }
     setFilteredBookings(dataset);
   }, [activeTab, allBookings]);
@@ -121,6 +123,33 @@ const ProviderDashboard = () => {
     }
   };
 
+  const handleCancelBooking = async (bookingId, paymentMethod) => {
+    const isOnlinePayment = paymentMethod && paymentMethod.toLowerCase() !== 'cash';
+    const refundWarning = isOnlinePayment 
+      ? "\n\n⚠️ Note: Since the client paid online, this cancellation will trigger a refund process." 
+      : "";
+
+    const confirmCancel = window.confirm(`Are you sure you want to reject this job and return it to the admin queue?${refundWarning}`);
+    if (!confirmCancel) return;
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/bookings/provider-cancel/${bookingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentMethod })
+      });
+
+      if (response.ok) {
+        setAllBookings(prev => prev.map(b => (b._id === bookingId || b.id === bookingId) ? { ...b, status: 'Cancelled' } : b));
+        alert("🔄 Booking successfully rejected and returned to Admin queue for reassignment.");
+      } else {
+        alert("❌ Failed to process cancellation.");
+      }
+    } catch (error) {
+      console.error("Provider cancel error:", error);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -138,7 +167,7 @@ const ProviderDashboard = () => {
   return (
     <div className="min-h-screen bg-[#F6FAFD] text-[#091F5C] font-sans antialiased selection:bg-blue-200">
       
-      {/* TOP PREMIUM NAVIGATION BAR (DARK MODE HIGHLIGHT) */}
+      {/* TOP PREMIUM NAVIGATION BAR */}
       <nav className="bg-[#0A1931] border-b border-blue-900/40 fixed top-0 w-full z-50 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
@@ -164,7 +193,7 @@ const ProviderDashboard = () => {
       {/* MAIN LAYOUT SPACE */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-12">
         
-        {/* BANNER LAYOUT CONFIGURATION (DARK MODULE) */}
+        {/* BANNER LAYOUT */}
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-[#0A1931] p-6 rounded-2xl border border-blue-950 shadow-xl text-white">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -197,7 +226,7 @@ const ProviderDashboard = () => {
           </div>
         </div>
 
-        {/* INTERACTIVE DATA TRACKING CARDS (DARK TILES ON LIGHT CANVAS) */}
+        {/* INTERACTIVE DATA TRACKING CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           
           <div 
@@ -248,7 +277,7 @@ const ProviderDashboard = () => {
 
         </div>
 
-        {/* ARCHITECTURE TABLE PANEL (CLEAN LIGHT DESIGN WITH SUBTLE CONTRASTS) */}
+        {/* ARCHITECTURE TABLE PANEL */}
         <div className="bg-white rounded-2xl border border-[#B3CFE5]/60 shadow-xl overflow-hidden">
           <div className="p-5 border-b border-[#B3CFE5]/60 bg-white flex justify-between items-center">
             <h2 className="font-bold text-[#091F5C] text-sm tracking-wide">
@@ -261,68 +290,109 @@ const ProviderDashboard = () => {
             {filteredBookings.length === 0 ? (
               <div className="p-16 text-center bg-white">
                 <div className="text-2xl mb-2">📥</div>
-                <p className="text-sm font-semibold text-[#091F5C]">No matching pipeline context entries found</p>
+                <p className="text-sm font-semibold text-[#091F5C]">No booking assignments</p>
                 <p className="text-xs text-[#4A7FA7] mt-1">Currently clear of administrative service dispatch operations.</p>
               </div>
             ) : (
-              // ProviderDashboard.jsx ka table section is tarah rakhein:
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#F6FAFD] text-[#4A7FA7] font-bold text-xs uppercase tracking-wider border-b border-[#B3CFE5]/60">
+                    <th className="p-4 pl-6">Client Identity</th>
+                    <th className="p-4">Service Scope (Multi-Service)</th>
+                    <th className="p-4">Execution Target Address</th>
+                    <th className="p-4">Schedule Frame</th>
+                    <th className="p-4 text-center">Client Rating</th>
+                    <th className="p-4 pr-6 text-center">Operation Control</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#B3CFE5]/30 text-sm font-medium text-[#091F5C]">
+                  {filteredBookings.map((booking) => {
+                    const totalAmt = Number(booking.totalAmount) || 0;
+                    const staffShare = Math.round(totalAmt * 0.80); // Provider/Staff 80% share calculation
 
-<table className="w-full text-left border-collapse">
-  <thead>
-    <tr className="bg-[#F6FAFD] text-[#4A7FA7] font-bold text-xs uppercase tracking-wider border-b border-[#B3CFE5]/60">
-      <th className="p-4 pl-6">Client Identity</th>
-      <th className="p-4">Service Scope</th>
-      <th className="p-4">Execution Target Address</th>
-      <th className="p-4">Schedule Frame</th>
-      <th className="p-4 text-center">Client Rating</th>
-      <th className="p-4 pr-6 text-center">Operation Control</th>
-    </tr>
-  </thead>
-  <tbody className="divide-y divide-[#B3CFE5]/30 text-sm font-medium text-[#091F5C]">
-    {filteredBookings.map((booking) => (
-      <tr key={booking._id || booking.id} className="hover:bg-[#F6FAFD]/60 transition-colors">
-        <td className="p-4 pl-6">
-          <div className="flex flex-col gap-1">
-            <span className="font-bold text-[#091F5C]">{booking.customerName || 'Customer'}</span>
-          </div>
-        </td>
-        <td className="p-4">
-          <span className="px-2.5 py-0.5 bg-[#F6FAFD] text-[#0A1931] rounded text-xs border border-[#B3CFE5]">
-            {booking.serviceTitle}
-          </span>
-        </td>
-        <td className="p-4 text-gray-600 font-normal">{booking.address}</td>
-        <td className="p-4 text-gray-600 font-normal">
-          {booking.date ? new Date(booking.date).toLocaleDateString('en-GB') : 'Recent'}
-        </td>
-        
-        {/* Rating Column */}
-        <td className="p-4 text-center font-bold">
-          {booking.rating ? (
-            <span className="text-amber-500 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
-              ⭐ {booking.rating}/5
-            </span>
-          ) : (
-            <span className="text-gray-400 text-xs italic">-</span>
-          )}
-        </td>
+                    return (
+                      <tr key={booking._id || booking.id} className="hover:bg-[#F6FAFD]/60 transition-colors">
+                        <td className="p-4 pl-6">
+                          <div className="flex flex-col gap-1">
+                            <span className="font-bold text-[#091F5C]">{booking.customerName || 'Customer'}</span>
+                            {booking.phone && <span className="text-xs text-gray-500">📞 {booking.phone}</span>}
+                          </div>
+                        </td>
+                        
+                        {/* Multi-Service Scope & Pricing / Payment Share Support */}
+                        <td className="p-4">
+                          <div className="flex flex-col gap-1">
+                            {booking.services && Array.isArray(booking.services) && booking.services.length > 0 ? (
+                              booking.services.map((s, idx) => (
+                                <span key={idx} className="inline-block px-2.5 py-0.5 bg-[#F6FAFD] text-[#0A1931] rounded text-xs border border-[#B3CFE5] w-fit font-bold">
+                                  {s.serviceTitle || s.name || s.title || 'Service'} {s.quantity > 1 ? `(x${s.quantity})` : ''}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="px-2.5 py-0.5 bg-[#F6FAFD] text-[#0A1931] rounded text-xs border border-[#B3CFE5] w-fit font-bold">
+                                {booking.serviceTitle || booking.serviceName || booking.title || booking.category || 'General Service'}
+                              </span>
+                            )}
+                            
+                            {booking.totalAmount && (
+                              <div className="mt-1.5 flex flex-col gap-0.5 bg-blue-50/60 p-2 rounded-lg border border-blue-100 w-fit">
+                                <span className="text-[11px] font-bold text-emerald-700">
+                                  Total Service Price: Rs. {totalAmt} ({booking.paymentMethod || 'Cash'})
+                                </span>
+                                <span className="text-[11px] font-extrabold text-blue-900">
+                                  Your Earnings (80%): Rs. {staffShare}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </td>
 
-        <td className="p-4 pr-6 text-center">
-          {activeTab === 'Active' ? (
-            <button
-              onClick={() => handleCompleteBooking(booking._id || booking.id)}
-              className="px-4 py-1.5 bg-[#0A1931] hover:bg-[#1A3D63] text-white rounded-lg text-xs font-bold transition active:scale-95"
-            >
-              Complete
-            </button>
-          ) : (
-            <span className="text-xs font-bold uppercase">{booking.status}</span>
-          )}
-        </td>
-      </tr>
-    ))}
-  </tbody>
-</table>
+                        <td className="p-4 text-gray-600 font-normal">{booking.address}</td>
+                        
+                        {/* Scheduled Date & Time Picker Format */}
+                        <td className="p-4 text-gray-600 font-normal">
+                          <div className="flex flex-col text-xs">
+                            <span className="font-semibold">{booking.date ? new Date(booking.date).toLocaleDateString('en-GB') : 'Recent'}</span>
+                            {booking.time && <span className="text-blue-600 font-bold mt-0.5">⏰ {booking.time}</span>}
+                          </div>
+                        </td>
+                        
+                        {/* Rating Column */}
+                        <td className="p-4 text-center font-bold">
+                          {booking.rating ? (
+                            <span className="text-amber-500 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200 text-xs">
+                              ⭐ {booking.rating}/5
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 text-xs italic">-</span>
+                          )}
+                        </td>
+
+                        <td className="p-4 pr-6 text-center">
+                          {activeTab === 'Active' ? (
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => handleCompleteBooking(booking._id || booking.id)}
+                                className="px-3 py-1.5 bg-[#0A1931] hover:bg-[#1A3D63] text-white rounded-lg text-xs font-bold transition active:scale-95"
+                              >
+                                Complete
+                              </button>
+                              <button
+                                onClick={() => handleCancelBooking(booking._id || booking.id, booking.paymentMethod)}
+                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-xs font-bold transition active:scale-95"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs font-bold uppercase">{booking.status}</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             )}
           </div>
         </div>

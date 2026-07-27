@@ -41,34 +41,37 @@ const MyBookings = () => {
   }, [navigate]);
 
   // Rating Submit Logic
- const handleRatingSubmit = async () => {
-  // Check karein ke rating valid hai ya nahi
-  if (ratingValue < 1 || ratingValue > 5) {
-    alert("Please enter a rating between 1 and 5.");
-    return;
-  }
-
-  try {
-    const response = await fetch(`http://localhost:5000/api/bookings/rate/${ratingModal.bookingId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rating: ratingValue }) // Yahan 'ratingValue' bhej rahe hain
-    });
-
-    if (response.ok) {
-      alert("✅ Rating saved successfully!");
-      window.location.reload(); 
-    } else {
-      alert("❌ Failed to submit rating.");
+  const handleRatingSubmit = async () => {
+    if (ratingValue < 1 || ratingValue > 5) {
+      alert("Please enter a rating between 1 and 5.");
+      return;
     }
-  } catch (error) {
-    console.error("Rating error:", error);
-  }
-};
-  
 
-  const handleCancelBooking = async (bookingId) => {
-    const confirmCancel = window.confirm("Are you sure you want to cancel this booking?");
+    try {
+      const response = await fetch(`http://localhost:5000/api/bookings/rate/${ratingModal.bookingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating: ratingValue })
+      });
+
+      if (response.ok) {
+        alert("✅ Rating saved successfully!");
+        window.location.reload(); 
+      } else {
+        alert("❌ Failed to submit rating.");
+      }
+    } catch (error) {
+      console.error("Rating error:", error);
+    }
+  };
+
+ const handleCancelBooking = async (bookingId, paymentMethod) => {
+    const isOnlinePayment = paymentMethod && paymentMethod.toLowerCase() !== 'cash';
+    const refundWarning = isOnlinePayment 
+      ? "\n\n⚠️ Note: Since this was an online payment, your refund will be processed within 3-5 working days." 
+      : "";
+
+    const confirmCancel = window.confirm(`Are you sure you want to cancel this booking?${refundWarning}`);
     if (!confirmCancel) return;
 
     try {
@@ -86,7 +89,6 @@ const MyBookings = () => {
       console.error("Cancel error:", error);
     }
   };
-
   const handleRescheduleBooking = async (bookingId) => {
     if (!newDate) {
       alert("Please select a valid new date.");
@@ -164,7 +166,7 @@ const MyBookings = () => {
                   <div className="space-y-4 max-w-sm w-full">
                     <div className="flex items-center gap-3 flex-wrap">
                       <h3 className="text-xl font-black text-[#0F172A] tracking-tight group-hover:text-blue-600 transition-colors">
-                        {booking.serviceTitle}
+                        {booking.serviceTitle || "Multiple Services"}
                       </h3>
                       <span className={`px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
                         isPending ? 'bg-amber-50 text-amber-600 border-amber-200/60' : 
@@ -174,15 +176,36 @@ const MyBookings = () => {
                       </span>
                     </div>
 
+                    {/* Multi-services list view */}
+                    {booking.services && booking.services.length > 0 && (
+                      <div className="space-y-1 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Booked Items:</span>
+                        {booking.services.map((srv, idx) => (
+                          <div key={idx} className="flex justify-between text-xs font-bold text-slate-700">
+                            <span>• {srv.title || srv.name} (Qty: {srv.quantity || 1})</span>
+                            <span className="text-blue-600">Rs. {srv.price * (srv.quantity || 1)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="space-y-2 text-xs font-bold text-slate-600 bg-[#F8FAFC] p-3 rounded-xl border border-slate-100">
-                      <div className="flex items-center gap-2">
-                        <span className="text-slate-400 font-medium">📅 Scheduled Date:</span> 
-                        <span className="text-slate-800 font-extrabold">{new Date(booking.date).toLocaleDateString('en-GB')}</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400 font-medium">📅 Date & Time:</span> 
+                        <span className="text-slate-800 font-extrabold">
+                          {new Date(booking.date).toLocaleDateString('en-GB')} {booking.time ? `| ${booking.time}` : ''}
+                        </span>
                       </div>
                       <div className="flex items-start gap-2">
                         <span className="text-slate-400 font-medium whitespace-nowrap">📍 Location:</span> 
                         <span className="text-slate-700 font-semibold">{booking.address}</span>
                       </div>
+                      {booking.totalAmount && (
+                        <div className="flex items-center justify-between border-t border-slate-200 pt-1.5 mt-1">
+                          <span className="text-slate-400 font-medium">💳 Total ({booking.paymentMethod || 'Cash'}):</span>
+                          <span className="text-emerald-600 font-black">Rs. {booking.totalAmount}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -207,7 +230,6 @@ const MyBookings = () => {
                   </div>
 
                   <div className="w-full lg:w-auto flex flex-col sm:flex-row lg:flex-col gap-2 justify-end items-stretch sm:items-center lg:items-end">
-                    {/* Rating logic start */}
                     {booking.rating ? (
                       <div className="w-full lg:w-44 px-4 py-2.5 rounded-xl border border-yellow-200 bg-yellow-50 text-yellow-600 font-black text-xs uppercase tracking-wider text-center">
                         ★ Rated {booking.rating}/5
@@ -232,9 +254,12 @@ const MyBookings = () => {
                         <button onClick={() => setReschedulingId(booking._id)} className="w-full lg:w-44 px-4 py-2.5 rounded-xl border border-blue-200 text-blue-600 hover:bg-blue-50/50 font-black text-xs uppercase tracking-wider transition-all text-center">
                           Reschedule
                         </button>
-                        <button onClick={() => handleCancelBooking(booking._id)} className="w-full lg:w-44 px-4 py-2.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50/50 font-black text-xs uppercase tracking-wider transition-all text-center">
-                          Cancel Booking
-                        </button>
+                        <button 
+  onClick={() => handleCancelBooking(booking._id, booking.paymentMethod)} 
+  className="w-full lg:w-44 px-4 py-2.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50/50 font-black text-xs uppercase tracking-wider transition-all text-center"
+>
+  Cancel Booking
+</button>
                       </>
                     )}
                   </div>

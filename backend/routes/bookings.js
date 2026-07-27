@@ -4,26 +4,44 @@ const router = express.Router();
 const Booking = require('../models/Booking');
 const User = require('../models/User'); 
 
-// 1. POST: Save a new booking tied to a specific user
+// 1. POST: Save a new booking tied to a specific user with cart items & payment info
 router.post('/add', async (req, res) => {
   try {
-    const { userId, serviceTitle, customerName, email, phone, address, date } = req.body;
+    const { 
+      userId, 
+      customerName, 
+      email, 
+      phone, 
+      address, 
+      date, 
+      time, 
+      services, 
+      totalAmount, 
+      paymentMethod, 
+      paymentDetails 
+    } = req.body;
     
     if (!userId) {
       return res.status(400).json({ message: "Authentication error: Missing User ID." });
     }
+
     const newBooking = new Booking({
       userId, 
-      serviceTitle, 
       customerName, 
       email, 
       phone, 
       address, 
       date,
-      rating: null // 0 ki jagah null rakhein
+      time,
+      services,
+      totalAmount,
+      paymentMethod,
+      paymentDetails,
+      rating: null 
     });
+
     await newBooking.save();
-    res.status(201).json({ message: "Booking confirmed successfully!" });
+    res.status(201).json({ message: "Booking confirmed successfully!", newBooking });
   } catch (error) {
     console.error("Booking Error:", error); 
     res.status(500).json({ message: "Error making booking", error: error.message });
@@ -39,19 +57,18 @@ router.get('/all', async (req, res) => {
     res.status(500).json({ message: "Error fetching all bookings", error: error.message });
   }
 });
+
 // NEW: Fetch bookings for a specific provider
 router.get('/provider/:providerId', async (req, res) => {
   try {
     const { providerId } = req.params;
-    
-    // Yahan check karein ke providerId valid hai ya nahi
     const bookings = await Booking.find({ providerId: providerId }).sort({ createdAt: -1 });
-    
     res.status(200).json(bookings);
   } catch (error) {
     res.status(500).json({ message: "Error fetching provider bookings", error: error.message });
   }
 });
+
 // 3. PUT: Update booking status and assign provider (For Admin)
 router.put('/update-status/:id', async (req, res) => {
   try {
@@ -64,8 +81,7 @@ router.put('/update-status/:id', async (req, res) => {
     const updatedBooking = await Booking.findByIdAndUpdate(
       req.params.id,
       updateData,
-      { status: 'Approved', providerId, providerName }, 
-  { new: true } 
+      { new: true } 
     );
 
     if (!updatedBooking) {
@@ -136,12 +152,11 @@ router.put('/respond-offer/:id', async (req, res) => {
   }
 });
 
-// 8. CLIENT: SUBMIT RATING & REVIEW (Combined both versions)
+// 8. CLIENT: SUBMIT RATING & REVIEW
 router.put('/rate/:id', async (req, res) => {
   try {
     const { rating, review } = req.body;
     
-    // Validation: Sirf tabhi update karein agar rating 1 aur 5 ke beech ho
     if (!rating || rating < 1 || rating > 5) {
       return res.status(400).json({ message: "Please provide a valid rating between 1 and 5." });
     }
@@ -162,7 +177,7 @@ router.put('/rate/:id', async (req, res) => {
   }
 });
 
-// ✨ SUPER PROFESSIONAL ─── CLIENT: RESCHEDULE A BOOKING WITH AUTO-STATUS
+// CLIENT: RESCHEDULE A BOOKING WITH AUTO-STATUS
 router.put('/reschedule/:id', async (req, res) => {
   try {
     const { date } = req.body;
@@ -177,7 +192,7 @@ router.put('/reschedule/:id', async (req, res) => {
         date: date,
         status: 'Rescheduled' 
       },
-      { returnDocument: 'after' }
+      { new: true }
     );
 
     if (!updatedBooking) {
@@ -191,16 +206,55 @@ router.put('/reschedule/:id', async (req, res) => {
 });
 
 // 9. DELETE: Cancel/Delete a booking (For Client Portal)
+// Backend route example (routes/bookings.js)
 router.delete('/cancel/:id', async (req, res) => {
   try {
-    const deletedBooking = await Booking.findByIdAndDelete(req.params.id);
-    if (!deletedBooking) {
-      return res.status(404).json({ message: "Booking not found!" });
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
     }
-    res.status(200).json({ message: "Booking cancelled successfully!" });
+
+    // Agar booking pehle hi completed hai, toh cancel nahi ho sakti
+    if (booking.status && booking.status.toLowerCase() === 'completed') {
+      return res.status(400).json({ message: "Completed bookings cannot be cancelled." });
+    }
+
+    // Agar approved/pending hai toh cancel kar ke refund flag set kar do
+    booking.status = 'Cancelled';
+    if (booking.paymentMethod && booking.paymentMethod.toLowerCase() !== 'cash') {
+      booking.paymentStatus = 'Refund Initiated';
+    }
+    await booking.save();
+
+    
+    res.status(200).json({ message: "Booking cancelled successfully and refund processed if applicable." });
   } catch (error) {
-    res.status(500).json({ message: "Cancellation failed", error: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
+// Provider cancel/reject booking route
+router.put('/provider-cancel/:id', async (req, res) => {
+  try {
+    const { paymentMethod } = req.body;
+    const booking = await Booking.findById(req.params.id);
+    
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
 
+    // Booking ko wapas 'Pending' state mein kar dein aur assigned provider hata dein
+    booking.status = 'Pending';
+    booking.providerId = null; 
+
+    // Agar online payment thi toh refund status update kar dein
+    if (paymentMethod && paymentMethod.toLowerCase() !== 'cash') {
+      booking.paymentStatus = 'Refund Initiated';
+    }
+
+    await booking.save();
+    res.status(200).json({ message: "Booking returned to queue successfully." });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 module.exports = router;
