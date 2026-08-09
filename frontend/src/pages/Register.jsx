@@ -150,7 +150,7 @@ const Register = () => {
         )}
         {success && (
           <div className="bg-emerald-50 border border-emerald-200 text-emerald-600 p-3 rounded-xl text-xs font-bold text-center">
-            🎉 {success}
+             {success}
           </div>
         )}
 

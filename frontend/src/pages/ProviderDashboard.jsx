@@ -114,7 +114,7 @@ const ProviderDashboard = () => {
       if (response.ok) {
         setAllBookings(prev => prev.map(b => (b._id === bookingId || b.id === bookingId) ? { ...b, status: 'Completed' } : b));
         setCompletedCount(prev => prev + 1);
-        alert("🎉 Task successfully marked as Completed!");
+        alert(" Task successfully marked as Completed!");
       } else {
         alert("Failed to update execution status.");
       }

@@ -6,23 +6,19 @@ const AdminDashboard = () => {
   const [providers, setProviders] = useState([]);
   const [selectedProviders, setSelectedProviders] = useState({});
   
-  // Search states
   const [providerSearchTerm, setProviderSearchTerm] = useState({});
   const [globalProviderSearch, setGlobalProviderSearch] = useState('');
   
-  // Navigation & Filtering
   const [activeTab, setActiveTab] = useState('bookings');
   const [statusFilter, setStatusFilter] = useState('All');
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // 1. Fetch all booking requests
         const bookingsRes = await fetch('http://localhost:5000/api/bookings/all');
         const bookingsData = await bookingsRes.json();
         if (bookingsRes.ok && Array.isArray(bookingsData)) setBookings(bookingsData);
         
-        // 2. Fetch all real providers
         const providersRes = await fetch('http://localhost:5000/api/auth/providers');
         const providersData = await providersRes.json();
         if (providersRes.ok && Array.isArray(providersData)) setProviders(providersData);
@@ -38,7 +34,7 @@ const AdminDashboard = () => {
   }, []);
 
   const getBookingPrice = (booking) => {
-    const directTotal = Number(booking.total || booking.totalPrice || booking.amount || booking.price);
+    const directTotal = Number(booking.total || booking.totalPrice || booking.amount || booking.price || booking.totalAmount);
     if (!isNaN(directTotal) && directTotal > 0) return directTotal;
 
     const itemsArray = booking.items || booking.bookedItems || booking.services;
@@ -59,6 +55,26 @@ const AdminDashboard = () => {
       return itemsArray.map(i => i.name || i.title || i.serviceName).filter(Boolean).join(', ');
     }
     return booking.serviceTitle || booking.serviceName || booking.service || booking.selectedService || 'Multiple Services';
+  };
+
+  // Robust payment details parser helper
+  const getPaymentInfo = (booking) => {
+    let pd = booking.paymentDetails || booking.payment || booking.paymentInfo || {};
+    
+    if (typeof pd === 'string') {
+      try {
+        pd = JSON.parse(pd);
+      } catch (e) {
+        pd = { rawText: pd };
+      }
+    }
+
+    const senderAcc = pd.senderAccountNo || pd.walletNumber || pd.accountNo || pd.senderAccount || booking.senderAccountNo || booking.walletNumber || booking.accountNo;
+    const senderNm = pd.senderName || booking.senderName;
+    const trxId = pd.transactionId || pd.trxId || booking.transactionId || booking.trxId;
+    const paymentMethod = booking.paymentMethod || pd.method || pd.paymentMethod || 'Easypaisa / JazzCash';
+
+    return { senderAcc, senderNm, trxId, paymentMethod, pd };
   };
 
   const handleAssignAndApprove = async (bookingId) => {
@@ -82,9 +98,9 @@ const AdminDashboard = () => {
       });
 
       if (response.ok) {
-        alert(`🎉 Task assigned to ${chosenProvider.name}!`);
+        alert(`bookingsTask assigned to ${chosenProvider.name}!`);
         setBookings(prev => prev.map(b => 
-          b._id === bookingId ? { ...b, status: 'Approved', providerName: chosenProvider.name } : b
+          b._id === bookingId ? { ...b, status: 'Approved', providerName: chosenProvider.name, providerId: chosenProvider._id || chosenProvider.id } : b
         ));
       } else {
         alert("Failed to update status.");
@@ -107,22 +123,33 @@ const AdminDashboard = () => {
     );
   }
 
-  // Active clients count fixed
-  const activeBookingsList = bookings.filter(b => b.status === 'Pending' || b.status === 'Approved' || b.status === 'Rescheduled' || !b.status);
-  const uniqueClientsCount = [...new Set(activeBookingsList.map(b => b.customerName || b.name))].length;
-  
-  const completedCount = bookings.filter(b => b.status === 'Completed').length;
+  const activeBookingsList = bookings.filter(b => {
+    const st = (b.status || 'Pending').toLowerCase();
+    return st === 'pending' || st === 'approved' || st === 'rescheduled';
+  });
+
+  // STRICT ASSIGNED BOOKINGS FILTER: Status must be Approved/Completed AND must have a provider assigned
+  const assignedBookingsList = bookings.filter(b => {
+  const st = (b.status || '').toLowerCase();
+  const hasProvider = Boolean(b.providerName || b.providerId);
+  return st === 'approved' && hasProvider; // Yahan sirf 'approved' rakha hai
+});
+
+  const completedCount = bookings.filter(b => (b.status || '').toLowerCase() === 'completed').length;
   const totalProviders = providers.length;
   const totalRevenueCollected = bookings.reduce((acc, curr) => acc + getBookingPrice(curr), 0);
   const adminShare = totalRevenueCollected * 0.20;
   const providerShare = totalRevenueCollected * 0.80;
 
   const getFilteredBookings = () => {
+    if (activeTab === 'assigned') {
+      return assignedBookingsList;
+    }
     if (statusFilter === 'ActiveClients') {
       return activeBookingsList;
     }
     if (statusFilter === 'CompletedTasks') {
-      return bookings.filter(b => b.status === 'Completed');
+      return bookings.filter(b => (b.status || '').toLowerCase() === 'completed');
     }
     return bookings;
   };
@@ -137,8 +164,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#F4F7FC] text-[#0F172A] flex font-sans antialiased flex-col">
-      
-      {/* Dashboard Content Container (Header removed from here so only the global one shows) */}
       <div className="flex flex-1">
         
         {/* SIDEBAR */}
@@ -153,6 +178,12 @@ const AdminDashboard = () => {
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'bookings' && statusFilter === 'All' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:bg-[#152238] hover:text-white'}`}
             >
               📋 Booking Requests ({activeBookingsList.length})
+            </button>
+            <button 
+              onClick={() => { setActiveTab('assigned'); setStatusFilter('All'); }} 
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'assigned' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:bg-[#152238] hover:text-white'}`}
+            >
+              ✅ Assigned Bookings ({assignedBookingsList.length})
             </button>
             <button 
               onClick={() => setActiveTab('providers')} 
@@ -176,15 +207,15 @@ const AdminDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div 
               onClick={() => { setActiveTab('bookings'); setStatusFilter('ActiveClients'); }}
-              className={`p-5 rounded-2xl shadow-md border cursor-pointer transition-all hover:scale-[1.01] ${statusFilter === 'ActiveClients' ? 'bg-[#0B1528] border-blue-500 text-white' : 'bg-white border-slate-200 text-[#0F172A]'}`}
+              className={`p-5 rounded-2xl shadow-md border cursor-pointer transition-all hover:scale-[1.01] ${statusFilter === 'ActiveClients' && activeTab === 'bookings' ? 'bg-[#0B1528] border-blue-500 text-white' : 'bg-white border-slate-200 text-[#0F172A]'}`}
             >
               <div className="text-xs font-bold uppercase opacity-80">Clients Summary</div>
-              <div className="text-3xl font-black mt-2">{uniqueClientsCount} <span className="text-xs font-medium">Active</span></div>
+              <div className="text-3xl font-black mt-2">{activeBookingsList.length} <span className="text-xs font-medium">Active</span></div>
             </div>
 
             <div 
               onClick={() => { setActiveTab('bookings'); setStatusFilter('CompletedTasks'); }}
-              className={`p-5 rounded-2xl shadow-md border cursor-pointer transition-all hover:scale-[1.01] ${statusFilter === 'CompletedTasks' ? 'bg-[#0B1528] border-purple-500 text-white' : 'bg-white border-slate-200 text-[#0F172A]'}`}
+              className={`p-5 rounded-2xl shadow-md border cursor-pointer transition-all hover:scale-[1.01] ${statusFilter === 'CompletedTasks' && activeTab === 'bookings' ? 'bg-[#0B1528] border-purple-500 text-white' : 'bg-white border-slate-200 text-[#0F172A]'}`}
             >
               <div className="text-xs font-bold uppercase opacity-80">Task Progress</div>
               <div className="text-3xl font-black mt-2 text-purple-600">{completedCount} <span className="text-xs font-medium">Finished</span></div>
@@ -201,87 +232,131 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          {/* TAB 1: BOOKING REQUESTS */}
-          {activeTab === 'bookings' && (
+          {/* TAB 1 & ASSIGNED: BOOKINGS PIPELINE */}
+          {(activeTab === 'bookings' || activeTab === 'assigned') && (
             <div className="bg-[#0B1528] rounded-2xl border border-slate-800 shadow-xl overflow-hidden text-white">
               <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-[#0D1B3E]/30">
-                <h3 className="font-extrabold text-white text-base">Client Bookings & Sub-Services Pipeline</h3>
+                <h3 className="font-extrabold text-white text-base">
+                  {activeTab === 'assigned' ? 'Assigned Bookings Pipeline' : 'Client Bookings & Sub-Services Pipeline'}
+                </h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="text-slate-400 font-bold text-xs uppercase border-b border-slate-800">
                       <th className="p-5 pl-6">Client & Target Service</th>
-                      <th className="p-5">Location</th>
+                      <th className="p-5">Location & Schedule</th>
+                      <th className="p-5">Payment Verification</th>
                       <th className="p-5">Status</th>
                       <th className="p-5">Staff Dispatch</th>
                       <th className="p-5 pr-6 text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="text-sm font-semibold text-slate-300">
-                    {getFilteredBookings().map((booking) => {
-                      const isPendingOrRescheduled = booking.status === 'Pending' || booking.status === 'Rescheduled' || !booking.status;
-                      const currentSearch = providerSearchTerm[booking._id] || '';
-                      const filteredMatchingProviders = providers.filter(p => p.name.toLowerCase().includes(currentSearch.toLowerCase()) || p.skill.toLowerCase().includes(currentSearch.toLowerCase()));
+                    {getFilteredBookings().length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="p-8 text-center text-slate-500 italic">No bookings found in this view.</td>
+                      </tr>
+                    ) : (
+                      getFilteredBookings().map((booking) => {
+                        const isPendingOrRescheduled = (booking.status || 'Pending').toLowerCase() === 'pending' || (booking.status || '').toLowerCase() === 'rescheduled';
+                        const currentSearch = providerSearchTerm[booking._id] || '';
+                        const filteredMatchingProviders = providers.filter(p => p.name.toLowerCase().includes(currentSearch.toLowerCase()) || p.skill.toLowerCase().includes(currentSearch.toLowerCase()));
 
-                      return (
-                        <tr key={booking._id} className="border-b border-slate-800/50">
-                          <td className="p-5 pl-6">
-                            <div className="font-extrabold text-white text-base">{booking.customerName || booking.name}</div>
-                            <div className="text-xs text-blue-400 font-black uppercase mt-1">{getBookingServiceName(booking)}</div>
-                            <div className="text-xs text-emerald-400 font-bold mt-1">Price: Rs. {getBookingPrice(booking)}</div>
-                          </td>
-                          <td className="p-5 text-xs text-slate-400">{booking.address || booking.location || 'Sialkot'}</td>
-                          <td className="p-5">
-                            <span className="px-3 py-1 text-xs font-black rounded-lg uppercase bg-amber-500/10 text-amber-400">
-                              {booking.status || 'Pending'}
-                            </span>
-                          </td>
-                          <td className="p-5">
-                            {isPendingOrRescheduled ? (
-                              <div className="space-y-2">
-                                <input 
-                                  type="text"
-                                  placeholder="Filter staff..."
-                                  className="w-full bg-[#070E1A] border border-slate-700 rounded p-1.5 text-xs text-white"
-                                  value={currentSearch}
-                                  onChange={(e) => setProviderSearchTerm({...providerSearchTerm, [booking._id]: e.target.value})}
-                                />
-                                <select
-                                  className="w-full bg-[#070E1A] border border-slate-700 rounded p-1.5 text-xs text-slate-300"
-                                  onChange={(e) => setSelectedProviders({ ...selectedProviders, [booking._id]: e.target.value })}
-                                >
-                                  <option value="" hidden>Select Expert</option>
-                                  {filteredMatchingProviders.map(p => (
-                                    <option key={p._id || p.id} value={p._id || p.id}>{p.name} ({p.skill})</option>
-                                  ))}
-                                </select>
+                        const { senderAcc, senderNm, trxId, paymentMethod, pd } = getPaymentInfo(booking);
+                        const hasAnyPaymentField = senderAcc || senderNm || trxId || (pd && typeof pd === 'object' && Object.keys(pd).length > 0 && !pd.rawText);
+
+                        return (
+                          <tr key={booking._id} className="border-b border-slate-800/50 align-top">
+                            <td className="p-5 pl-6">
+                              <div className="font-extrabold text-white text-base">{booking.customerName || booking.name}</div>
+                              <div className="text-xs text-blue-400 font-black uppercase mt-1">{getBookingServiceName(booking)}</div>
+                              <div className="text-xs text-emerald-400 font-bold mt-1">Price: Rs. {getBookingPrice(booking)}</div>
+                              {booking.email && <div className="text-[11px] text-slate-400 mt-0.5">Email: {booking.email}</div>}
+                              {booking.phone && <div className="text-[11px] text-slate-400">Phone: {booking.phone}</div>}
+                            </td>
+                            <td className="p-5 text-xs text-slate-400 space-y-1">
+                              <div>📍 {booking.address || booking.location || 'Sialkot'}</div>
+                              {booking.date && <div>📅 {booking.date}</div>}
+                              {booking.time && <div>⏰ {booking.time}</div>}
+                            </td>
+                            <td className="p-5 text-xs">
+                              <div className="font-bold text-white uppercase bg-slate-800/80 px-2 py-0.5 rounded w-fit mb-1">
+                                {paymentMethod}
                               </div>
-                            ) : (
-                              <span className="text-xs font-bold text-slate-400">Assigned: {booking.providerName}</span>
-                            )}
-                          </td>
-                          <td className="p-5 pr-6 text-center">
-                            <div className="flex items-center justify-center gap-2">
-                              {isPendingOrRescheduled && (
-                                <button 
-                                  onClick={() => handleAssignAndApprove(booking._id)} 
-                                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold uppercase transition-all"
-                                >
-                                  Approve
-                                </button>
+                              {hasAnyPaymentField || senderAcc || senderNm || trxId ? (
+                                <div className="space-y-1 text-slate-300 bg-[#070E1A] p-2.5 rounded border border-slate-800 mt-1">
+                                  {senderAcc && (
+                                    <div><span className="text-slate-500">Sender Acc:</span> <span className="text-white font-mono">{senderAcc}</span></div>
+                                  )}
+                                  {senderNm && (
+                                    <div><span className="text-slate-500">Sender Name:</span> <span className="text-white">{senderNm}</span></div>
+                                  )}
+                                  {trxId && (
+                                    <div><span className="text-slate-500">TRX ID:</span> <span className="text-amber-400 font-bold">{trxId}</span></div>
+                                  )}
+                                  {pd.rawText && (
+                                    <div><span className="text-slate-500">Details:</span> <span className="text-white">{pd.rawText}</span></div>
+                                  )}
+                                  {typeof pd === 'object' && !senderAcc && !senderNm && !trxId && !pd.rawText && Object.entries(pd).map(([k, v]) => (
+                                    v ? <div key={k}><span className="text-slate-500">{k}:</span> <span className="text-white">{String(v)}</span></div> : null
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-slate-500 italic">No payment details provided</span>
                               )}
-                              <button 
-                                onClick={() => handleDeleteBooking(booking._id)} 
-                                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded text-xs font-bold uppercase transition-all"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                            </td>
+                            <td className="p-5">
+                              <span className="px-3 py-1 text-xs font-black rounded-lg uppercase bg-amber-500/10 text-amber-400">
+                                {booking.status || 'Pending'}
+                              </span>
+                            </td>
+                            <td className="p-5">
+                              {isPendingOrRescheduled ? (
+                                <div className="space-y-2">
+                                  <input 
+                                    type="text"
+                                    placeholder="Filter staff..."
+                                    className="w-full bg-[#070E1A] border border-slate-700 rounded p-1.5 text-xs text-white"
+                                    value={currentSearch}
+                                    onChange={(e) => setProviderSearchTerm({...providerSearchTerm, [booking._id]: e.target.value})}
+                                  />
+                                  <select
+                                    className="w-full bg-[#070E1A] border border-slate-700 rounded p-1.5 text-xs text-slate-300"
+                                    onChange={(e) => setSelectedProviders({ ...selectedProviders, [booking._id]: e.target.value })}
+                                  >
+                                    <option value="" hidden>Select Expert</option>
+                                    {filteredMatchingProviders.map(p => (
+                                      <option key={p._id || p.id} value={p._id || p.id}>{p.name} ({p.skill})</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              ) : (
+                                <span className="text-xs font-bold text-slate-400">Assigned: {booking.providerName}</span>
+                              )}
+                            </td>
+                            <td className="p-5 pr-6 text-center">
+                              <div className="flex items-center justify-center gap-2">
+                                {isPendingOrRescheduled && (
+                                  <button 
+                                    onClick={() => handleAssignAndApprove(booking._id)} 
+                                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold uppercase transition-all"
+                                  >
+                                    Approve
+                                  </button>
+                                )}
+                                <button 
+                                  onClick={() => handleDeleteBooking(booking._id)} 
+                                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded text-xs font-bold uppercase transition-all"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -318,7 +393,6 @@ const AdminDashboard = () => {
             <div className="bg-[#0B1528] text-white rounded-2xl border border-slate-800 shadow-xl p-6 space-y-6">
               <h3 className="font-extrabold text-white text-base">Gross Splitting Ledger & Financial Calculations</h3>
               
-              {/* Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-[#070E1A] p-5 rounded-xl border border-slate-800">
                   <div className="text-slate-400 text-xs font-bold uppercase">Total Revenue</div>
@@ -334,7 +408,6 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              {/* Detailed Breakdown Table */}
               <div className="bg-[#070E1A] rounded-xl border border-slate-800 overflow-hidden mt-6">
                 <div className="p-4 border-b border-slate-800 bg-[#0B1528]">
                   <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-300">Service-wise Revenue & Split Details</h4>
@@ -345,10 +418,11 @@ const AdminDashboard = () => {
                       <tr className="text-slate-400 font-bold text-xs uppercase border-b border-slate-800 bg-[#070E1A]">
                         <th className="p-4 pl-6">Client Name</th>
                         <th className="p-4">Service Name</th>
+                        <th className="p-4">Payment Method / TRX ID</th>
                         <th className="p-4">Assigned Provider</th>
                         <th className="p-4">Total Price</th>
-                        <th className="p-4">Admin Share (20%)</th>
-                        <th className="p-4 pr-6">Provider Share (80%)</th>
+                        <th className="p-4">Admin (20%)</th>
+                        <th className="p-4 pr-6">Provider (80%)</th>
                       </tr>
                     </thead>
                     <tbody className="text-sm font-medium text-slate-300 divide-y divide-slate-800/60">
@@ -356,10 +430,18 @@ const AdminDashboard = () => {
                         const price = getBookingPrice(booking);
                         const aShare = price * 0.20;
                         const pShare = price * 0.80;
+                        const { trxId, paymentMethod } = getPaymentInfo(booking);
+
                         return (
                           <tr key={booking._id} className="hover:bg-slate-900/40">
                             <td className="p-4 pl-6 font-bold text-white">{booking.customerName || booking.name || 'N/A'}</td>
                             <td className="p-4 text-blue-400 font-semibold">{getBookingServiceName(booking)}</td>
+                            <td className="p-4 text-xs text-slate-300">
+                              <span className="uppercase font-bold text-blue-300">{paymentMethod}</span>
+                              {trxId && (
+                                <div className="text-amber-400 font-mono text-[11px]">TRX: {trxId}</div>
+                              )}
+                            </td>
                             <td className="p-4 text-slate-300">{booking.providerName || <span className="text-amber-400 text-xs font-bold">Unassigned</span>}</td>
                             <td className="p-4 font-bold text-white">Rs. {price.toLocaleString()}</td>
                             <td className="p-4 font-bold text-blue-400">Rs. {aShare.toLocaleString()}</td>

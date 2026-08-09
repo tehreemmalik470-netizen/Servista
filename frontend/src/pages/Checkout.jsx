@@ -12,11 +12,10 @@ const Checkout = () => {
     date: '', 
     time: '', 
     location: '', 
-    paymentMethod: 'card', 
-    cardNumber: '', 
-    cardExpiry: '', 
-    cardCvv: '', 
-    walletNumber: ''
+    paymentMethod: 'card',
+    senderAccountNo: '',
+    senderName: '',
+    transactionId: ''
   });
   const navigate = useNavigate();
 
@@ -43,17 +42,6 @@ const Checkout = () => {
       return;
     }
 
-    // Payment Method Validation
-    if (formData.paymentMethod === 'card' && (!formData.cardNumber || !formData.cardExpiry || !formData.cardCvv)) {
-      alert("Please enter complete card details!");
-      return;
-    }
-
-    if (formData.paymentMethod === 'easypaisa' && !formData.walletNumber) {
-      alert("Please enter your mobile account number!");
-      return;
-    }
-
     try {
       // Format cart items for backend
       const formattedServices = cart.map(item => ({
@@ -64,7 +52,7 @@ const Checkout = () => {
 
       const bookingPayload = {
         userId,
-        serviceTitle: cart.length > 0 ? (cart[0].title || cart[0].name) : 'Multiple Services', // Backend ki requirement pori karne ke liye
+        serviceTitle: cart.length > 0 ? (cart[0].title || cart[0].name) : 'Multiple Services',
         customerName: formData.name,
         email: formData.email,
         phone: formData.phone,
@@ -75,9 +63,10 @@ const Checkout = () => {
         totalAmount,
         paymentMethod: formData.paymentMethod,
         paymentDetails: {
-          cardNumber: formData.paymentMethod === 'card' ? formData.cardNumber : '',
-          cardExpiry: formData.paymentMethod === 'card' ? formData.cardExpiry : '',
-          walletNumber: formData.paymentMethod === 'easypaisa' ? formData.walletNumber : ''
+          methodType: formData.paymentMethod,
+          senderAccountNo: formData.senderAccountNo,
+          senderName: formData.senderName,
+          transactionId: formData.transactionId
         }
       };
 
@@ -95,7 +84,7 @@ const Checkout = () => {
         throw new Error(data.message || "Failed to make booking");
       }
 
-      alert("Payment Successful & Booking Confirmed!");
+      alert("Booking Confirmed Successfully!");
       clearCart();
       navigate('/services');
     } catch (error) {
@@ -139,75 +128,91 @@ const Checkout = () => {
             <input type="text" placeholder="Full Name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border rounded" />
             <input type="tel" placeholder="Phone Number" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full p-3 border rounded" />
             <input type="email" placeholder="Email Address" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full p-3 border rounded" />
-            <div className="flex gap-4">
-              <input type="date" value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} className="w-full p-3 border rounded" />
-              <div>
- 
-  <div className="flex gap-1 w-full">
-    {/* Hour Select */}
-    <select 
-      value={formData.hour || ''} 
-      onChange={(e) => {
-        const hour = e.target.value;
-        const minute = formData.minute || '00';
-        const period = formData.period || 'AM';
-        setFormData({
-          ...formData, 
-          hour, 
-          time: `${hour}:${minute} ${period}`
-        });
-      }} 
-      className="w-1/3 p-3 border rounded bg-white text-sm"
-    >
-      <option value="">HH</option>
-      {['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'].map((h) => (
-        <option key={h} value={h}>{h}</option>
-      ))}
-    </select>
+            
+            {/* Date and Time Compact Row Layout */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input 
+                type="date" 
+                value={formData.date} 
+                onChange={(e) => setFormData({...formData, date: e.target.value})} 
+                className="w-full sm:w-1/2 p-3 border rounded bg-white text-sm" 
+              />
+              
+              <div className="flex items-center gap-1.5 w-full sm:w-1/2">
+                {/* Hour Select */}
+                <select 
+                  value={formData.hour || ''} 
+                  onChange={(e) => {
+                    const hour = e.target.value;
+                    const minute = formData.minute || '00';
+                    const period = formData.period || 'AM';
+                    setFormData({
+                      ...formData, 
+                      hour, 
+                      time: `${hour}:${minute} ${period}`
+                    });
+                  }} 
+                  className="w-1/3 p-3 border rounded bg-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-blue-600"
+                >
+                  <option value="">HH</option>
+                  {['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'].map((h) => (
+                    <option key={h} value={h}>{h}</option>
+                  ))}
+                </select>
 
-    {/* Minute Select */}
-    <select 
-      value={formData.minute || ''} 
-      onChange={(e) => {
-        const minute = e.target.value;
-        const hour = formData.hour || '09';
-        const period = formData.period || 'AM';
-        setFormData({
-          ...formData, 
-          minute, 
-          time: `${hour}:${minute} ${period}`
-        });
-      }} 
-      className="w-1/3 p-3 border rounded bg-white text-sm"
-    >
-      <option value="">MM</option>
-      <option value="00">00</option>
-      <option value="15">15</option>
-      <option value="30">30</option>
-      <option value="45">45</option>
-    </select>
+                <span className="text-gray-400 font-bold">:</span>
 
-    {/* AM / PM Select */}
-    <select 
-      value={formData.period || 'AM'} 
-      onChange={(e) => {
-        const period = e.target.value;
-        const hour = formData.hour || '09';
-        const minute = formData.minute || '00';
-        setFormData({
-          ...formData, 
-          period, 
-          time: `${hour}:${minute} ${period}`
-        });
-      }} 
-      className="w-1/3 p-3 border rounded bg-white text-sm font-semibold"
-    >
-      <option value="AM">AM</option>
-      <option value="PM">PM</option>
-    </select>
-  </div>
-</div>
+                {/* Minute Select */}
+                <select 
+                  value={formData.minute || ''} 
+                  onChange={(e) => {
+                    const minute = e.target.value;
+                    const hour = formData.hour || '09';
+                    const period = formData.period || 'AM';
+                    setFormData({
+                      ...formData, 
+                      minute, 
+                      time: `${hour}:${minute} ${period}`
+                    });
+                  }} 
+                  className="w-1/3 p-3 border rounded bg-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-blue-600"
+                >
+                  <option value="">MM</option>
+                  <option value="00">00</option>
+                  <option value="05">05</option>
+                  <option value="10">10</option>
+                  <option value="15">15</option>
+                  <option value="20">20</option>
+                  <option value="25">25</option>
+                  <option value="30">30</option>
+                  <option value="35">35</option>
+                  <option value="40">40</option>
+                  <option value="45">45</option>
+                  <option value="50">50</option>
+                  <option value="55">55</option>
+                </select>
+
+                {/* AM / PM Select */}
+                <select 
+                  value={formData.period || 'AM'} 
+                  onChange={(e) => {
+                    const period = e.target.value;
+                    const hour = formData.hour || '09';
+                    const minute = formData.minute || '00';
+                    setFormData({
+                      ...formData, 
+                      period, 
+                      time: `${hour}:${minute} ${period}`
+                    });
+                  }} 
+                  className="w-1/3 p-3 border rounded bg-white text-xs font-bold focus:outline-none focus:ring-1 focus:ring-blue-600"
+                >
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </select>
+              </div>
             </div>
+
           </div>
         </div>
 
@@ -229,7 +234,7 @@ const Checkout = () => {
                     checked={formData.paymentMethod === 'card'}
                     onChange={(e) => setFormData({...formData, paymentMethod: e.target.value})}
                   />
-                  <span className="font-medium">Debit / Credit Card</span>
+                  <span className="font-medium">Direct Bank Transfer / Card</span>
                 </div>
                 <div className="flex gap-1 text-xs font-bold text-blue-900">
                   <span>VISA</span> <span>MC</span>
@@ -251,44 +256,52 @@ const Checkout = () => {
               </label>
             </div>
 
-            {/* Conditional Fields based on Payment Method */}
+            {/* Admin Payment Details & Client Input Box */}
             {formData.paymentMethod === 'card' && (
-              <div className="space-y-3 pt-2 border-t">
+              <div className="p-4 bg-blue-50/60 border border-blue-200 rounded-lg text-xs space-y-3 text-slate-700">
+                <p className="font-bold text-blue-900 text-sm">🏦 Admin Bank Details:</p>
+                <p><span className="font-semibold">Account Title:</span> Servista Official</p>
+                <p><span className="font-semibold">Account Number:</span> 1234-5678-9012-3456</p>
+                
+                <hr className="border-blue-200" />
+                <p className="font-semibold text-slate-800">Enter your Payment Details:</p>
                 <input 
                   type="text" 
-                  placeholder="Card Number (XXXX XXXX XXXX XXXX)" 
-                  value={formData.cardNumber}
-                  onChange={(e) => setFormData({...formData, cardNumber: e.target.value})}
-                  className="w-full p-3 border rounded text-sm"
+                  placeholder=" Bank Account / Card Number" 
+                  value={formData.senderAccountNo} 
+                  onChange={(e) => setFormData({...formData, senderAccountNo: e.target.value})} 
+                  className="w-full p-2.5 border rounded bg-white text-sm"
                 />
-                <div className="flex gap-3">
-                  <input 
-                    type="text" 
-                    placeholder="MM / YY" 
-                    value={formData.cardExpiry}
-                    onChange={(e) => setFormData({...formData, cardExpiry: e.target.value})}
-                    className="w-full p-3 border rounded text-sm"
-                  />
-                  <input 
-                    type="password" 
-                    placeholder="CVV" 
-                    value={formData.cardCvv}
-                    onChange={(e) => setFormData({...formData, cardCvv: e.target.value})}
-                    className="w-full p-3 border rounded text-sm"
-                  />
-                </div>
+                <input 
+                  type="text" 
+                  placeholder="Account Holder Name" 
+                  value={formData.senderName} 
+                  onChange={(e) => setFormData({...formData, senderName: e.target.value})} 
+                  className="w-full p-2.5 border rounded bg-white text-sm"
+                />
               </div>
             )}
 
             {formData.paymentMethod === 'easypaisa' && (
-              <div className="p-3 bg-gray-50 border rounded text-sm space-y-2">
-                <p className="text-gray-600 font-medium">Enter your mobile account number for verification.</p>
+              <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-lg text-xs space-y-3 text-slate-700">
+                <p className="font-bold text-emerald-900 text-sm">Admin Mobile Wallet Details:</p>
+                <p><span className="font-semibold">EasyPaisa / JazzCash:</span> 0300-1234567 (Servista Admin)</p>
+                
+                <hr className="border-emerald-200" />
+                <p className="font-semibold text-slate-800">Enter your Transaction Details:</p>
                 <input 
                   type="tel" 
-                  placeholder="Mobile Number (03XXXXXXXXX)" 
-                  value={formData.walletNumber}
-                  onChange={(e) => setFormData({...formData, walletNumber: e.target.value})}
-                  className="w-full p-3 border rounded bg-white text-sm"
+                  placeholder=" Enter your mobile number " 
+                  value={formData.senderAccountNo} 
+                  onChange={(e) => setFormData({...formData, senderAccountNo: e.target.value})} 
+                  className="w-full p-2.5 border rounded bg-white text-sm"
+                />
+                <input 
+                  type="text" 
+                  placeholder="Transaction ID / TRX ID (SMS ID)" 
+                  value={formData.transactionId} 
+                  onChange={(e) => setFormData({...formData, transactionId: e.target.value})} 
+                  className="w-full p-2.5 border rounded bg-white text-sm"
                 />
               </div>
             )}

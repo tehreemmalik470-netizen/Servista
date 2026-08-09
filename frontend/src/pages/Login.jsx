@@ -8,7 +8,6 @@ const Login = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -141,7 +140,7 @@ const Login = () => {
         )}
         {success && (
           <div className="bg-emerald-50 border border-emerald-200 text-emerald-600 p-3 rounded-xl text-xs font-bold text-center">
-            🎉 {success}
+             {success}
           </div>
         )}
 

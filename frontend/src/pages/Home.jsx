@@ -5,7 +5,6 @@ const Home = () => {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
   const getServiceKey = (title) => {
     const mapping = {
       "Cleaning Services": "cleaningservices",
@@ -155,7 +154,7 @@ const Home = () => {
         </div>          
         <div className="lg:col-span-6 relative">
           <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl aspect-[4/5] lg:aspect-square group bg-slate-100">
-            <img src="hero.jpg" alt="Servista Professional" className="w-full h-full object-cover" /> 
+            <img src="herosection.jpg" alt="Servista Professional" className="w-full h-full object-cover" /> 
           </div>
         </div>
       </main>
@@ -190,8 +189,7 @@ const Home = () => {
       </div>
     </div>
   </Link>
-))}
-                
+))}        
           </div>
         )}
       </section>

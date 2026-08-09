@@ -17,16 +17,6 @@ import Services from './pages/Services';
 import SubServices from './pages/SubServices';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
-// App.jsx
-import Cleaning from './pages/Cleaning';
-import Plumbing from './pages/Plumbing';
-import Electrician from './pages/Electrician';
-import PestControl from './pages/PestControl';
-import Solar from './pages/Solar';
-import Shifting from './pages/Shifting';
-import Paintdecor from './pages/Paint-decor';
-import Carpenter from './pages/Carpenter';
-import ACRepairing from './pages/ACRepairing';
 
 function App() {
   return (
@@ -43,14 +33,7 @@ function App() {
         <Route path="/contactUs" element={<ContactUs />} />
         <Route path="/services" element={<Services />} /> 
         <Route path="/services/:serviceCategory" element={<SubServices />} />
-        <Route path="/cleaning" element={<Cleaning />} />
-<Route path="/plumbing" element={<Plumbing />} />
-<Route path="/electrician" element={<Electrician />} />
-<Route path="/solarinstallation" element={<Solar />} />
-<Route path="/ac-repairing" element={<ACRepairing/>} />
-<Route path="/shifting" element={<Shifting/>} />
-<Route path="/paint-decor" element={<Paint-decor/>} />
-<Route path="/carpenter" element={<Carpenter/>} />
+       
         {/* PROTECTED ROUTES LAYER */}
         <Route element={<ProtectedRoute />}>
           {/* General Protected Routes (Sirf Token chahiye) */}
