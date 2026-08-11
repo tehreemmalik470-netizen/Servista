@@ -22,7 +22,7 @@ const Navbar = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     setUser(null);
-    alert("Logged out successfully! 👋");
+    alert("Logged out successfully! ");
     navigate('/login');
   };
 
@@ -33,76 +33,80 @@ const Navbar = () => {
   const isProvider = userRole === 'provider';
 
   return (
-    <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between border-b border-slate-50 sticky top-0 bg-white/80 backdrop-blur-md z-50">
-      {/* LOGO */}
-      <div className="flex items-center">
-        <Link to="/" className="text-xl font-black tracking-tight text-[#0f172a] hover:opacity-80 transition-opacity">
-          SERVISTA
-        </Link>
-      </div>
-      
-      {/* LINKS */}
-      <div className="hidden md:flex items-center gap-8 font-semibold text-slate-500 text-xs uppercase tracking-widest">
-        {isAdmin && (
-          <Link to="/admin-dashboard" className={`${location.pathname === '/admin-dashboard' ? 'text-blue-600' : 'hover:text-slate-900'} transition-colors font-bold`}>
-            Admin Dashboard
-          </Link>
-        )}
+    <nav className="max-w-full bg-slate-900 text-slate-200 border-b border-slate-800 sticky top-0 backdrop-blur-md z-50 px-6 py-4 shadow-lg">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
         
-        {isProvider && (
-          <Link to="/provider-dashboard" className={`${location.pathname === '/provider-dashboard' ? 'text-blue-600' : 'hover:text-slate-900'} transition-colors font-bold`}>
-            Provider Dashboard
+        {/* LOGO */}
+        <div className="flex items-center">
+          <Link to="/" className="text-xl font-black tracking-tight text-white hover:opacity-80 transition-opacity">
+            SERV<span className="text-blue-500">ISTA</span>
           </Link>
-        )}
+        </div>
+        
+        {/* LINKS */}
+        <div className="hidden md:flex items-center gap-8 font-semibold text-slate-400 text-xs uppercase tracking-widest">
+          {isAdmin && (
+            <Link to="/admin-dashboard" className={`${location.pathname === '/admin-dashboard' ? 'text-blue-400 font-bold' : 'hover:text-white'} transition-colors`}>
+              Admin Dashboard
+            </Link>
+          )}
+          
+          {isProvider && (
+            <Link to="/provider-dashboard" className={`${location.pathname === '/provider-dashboard' ? 'text-blue-400 font-bold' : 'hover:text-white'} transition-colors`}>
+              Provider Dashboard
+            </Link>
+          )}
 
-        {location.pathname === '/' ? (
-          <a href="#services" className="hover:text-slate-900 transition-colors">Services</a>
-        ) : (
-          <Link to="/" className="hover:text-slate-900 transition-colors">Services</Link>
-        )}
-        <Link to="/experts" className={`${location.pathname === '/experts' ? 'text-blue-600' : 'hover:text-slate-900'} transition-colors`}>Find Experts</Link>
-        <Link to="/about" className={`${location.pathname === '/about' ? 'text-blue-600' : 'hover:text-slate-900'} transition-colors`}>About</Link>
-        <Link to="/contactUs" className={`${location.pathname === '/contactUs' ? 'text-blue-600' : 'hover:text-slate-900'} transition-colors`}>ContactUs</Link>
+          {location.pathname === '/' ? (
+            <a href="#services" className="hover:text-white transition-colors">Services</a>
+          ) : (
+            <Link to="/" className="hover:text-white transition-colors">Services</Link>
+          )}
+          <Link to="/experts" className={`${location.pathname === '/experts' ? 'text-blue-400 font-bold' : 'hover:text-white'} transition-colors`}>Find Experts</Link>
+          <Link to="/about" className={`${location.pathname === '/about' ? 'text-blue-400 font-bold' : 'hover:text-white'} transition-colors`}>About</Link>
+          <Link to="/contactUs" className={`${location.pathname === '/contactUs' ? 'text-blue-400 font-bold' : 'hover:text-white'} transition-colors`}>ContactUs</Link>
+          
+          {/* MY CART - Sirf tab show hoga jab user ADMIN DASHBOARD par na ho */}
+          {!location.pathname.startsWith('/admin-dashboard') && (
+            <Link to="/cart" className="relative flex items-center gap-1 font-semibold text-slate-300 hover:text-blue-400 transition-colors">
+              My Cart
+              {cart && cart.length > 0 && (
+                <span className="absolute -top-3 -right-4 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                  {cart.length}
+                </span>
+              )}
+            </Link>
+          )}
+
+          {!isAdmin && !isProvider && (
+            <Link to="/my-bookings" className={`${location.pathname === '/my-bookings' ? 'text-blue-400 font-bold' : 'hover:text-white'} transition-colors`}>
+              My Bookings
+            </Link>
+          )}
+        </div>
         
-        {/* 🛑 MY CART - Sirf tab show hoga jab user ADMIN DASHBOARD par na ho */}
-        {!location.pathname.startsWith('/admin-dashboard') && (
-          <Link to="/cart" className="relative flex items-center gap-1 font-semibold text-slate-800 hover:text-blue-600 transition-colors">
-            My Cart
-            {cart && cart.length > 0 && (
-              <span className="absolute -top-3 -right-4 bg-[#e65a3f] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-                {cart.length}
+        {/* AUTH BUTTONS & LOGOUT */}
+        <div className="flex items-center gap-4">
+          {user ? (
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold text-slate-300 bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-md tracking-wider">
+                Hi, {user.name?.split(' ')[0]} ({isAdmin ? 'Admin' : user.role})
               </span>
-            )}
-          </Link>
-        )}
+              <button 
+                onClick={handleLogout} 
+                className="bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors uppercase tracking-wider cursor-pointer"
+              >
+                Log out
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <Link to="/login" className="text-xs font-bold text-slate-300 hover:text-white transition-colors uppercase tracking-wider">Log in</Link>
+              <Link to="/register" className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-600/30">Sign up</Link>
+            </div>
+          )}
+        </div>
 
-        {!isAdmin && !isProvider && (
-          <Link to="/my-bookings" className={`${location.pathname === '/my-bookings' ? 'text-blue-600' : 'hover:text-slate-900'} transition-colors`}>
-            My Bookings
-          </Link>
-        )}
-      </div>
-      
-      {/* AUTH BUTTONS & LOGOUT */}
-      <div className="flex items-center gap-6">
-        {user ? (
-          <div className="flex items-center gap-4">
-            <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-md tracking-wider">
-              Hi, {user.name?.split(' ')[0]} ({isAdmin ? 'Admin' : user.role})
-            </span>
-            <button 
-              onClick={handleLogout} 
-              className="text-xs font-bold text-red-600 hover:text-red-700 transition-colors uppercase tracking-wider cursor-pointer"
-            >
-              Log out
-            </button>
-          </div>
-        ) : (
-          <>
-            <Link to="/login" className="text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors uppercase tracking-wider">Log in</Link>
-            <Link to="/register" className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20">Sign up</Link>
-          </>
-        )}
       </div>
     </nav>
   );

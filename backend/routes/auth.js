@@ -4,10 +4,10 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// ─── USER REGISTRATION (SIGN UP WITH SKILL SUPPORT) ───
+// ─── USER REGISTRATION (SIGN UP WITH SKILL & PAYOUT SUPPORT) ───
 router.post('/register', async (req, res) => {
     try {
-        const { name, email, password, role, skill, location } = req.body;
+        const { name, email, password, role, skill, location, walletType, bankName, accountTitle, accountNumber, mobileNumber } = req.body;
 
         // 1. Check karein user pehle se exist toh nahi karta
         let user = await User.findOne({ email });
@@ -17,7 +17,7 @@ router.post('/register', async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // 3. Naya User save karein (with role, skill, and default availability)
+        // 3. Naya User save karein (with role, skill, availability, and payout info)
         user = new User({ 
             name, 
             email, 
@@ -25,7 +25,12 @@ router.post('/register', async (req, res) => {
             role,
             location: role === 'Provider' ? location : undefined,
             skill: role === 'Provider' ? skill : null,
-            isAvailable: role === 'Provider' ? true : undefined
+            isAvailable: role === 'Provider' ? true : undefined,
+            walletType: role === 'Provider' ? (walletType || 'Direct Bank Transfer / Card') : undefined,
+            bankName: role === 'Provider' ? bankName : undefined,
+            accountTitle: role === 'Provider' ? accountTitle : undefined,
+            accountNumber: role === 'Provider' ? accountNumber : undefined,
+            mobileNumber: role === 'Provider' ? mobileNumber : undefined
         });
         
         await user.save();
@@ -36,7 +41,7 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// ─── USER LOGIN (WITH SKILL AND AVAILABILITY RESPONSE) ───
+// ─── USER LOGIN (WITH SKILL, AVAILABILITY AND PAYOUT RESPONSE) ───
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -78,7 +83,12 @@ router.post('/login', async (req, res) => {
                 role: user.role,
                 location: user.location, 
                 skill: user.skill,            
-                isAvailable: user.isAvailable 
+                isAvailable: user.isAvailable,
+                walletType: user.walletType,
+                bankName: user.bankName,
+                accountTitle: user.accountTitle,
+                accountNumber: user.accountNumber,
+                mobileNumber: user.mobileNumber
             }
         });
     } catch (error) {
@@ -86,12 +96,11 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// ─── FIXED: UPDATE PROVIDER AVAILABILITY STATUS ───
+// ─── UPDATE PROVIDER AVAILABILITY STATUS ───
 router.put('/update-availability/:id', async (req, res) => {
     try {
-        const { isAvailable } = req.body; // Frontend se true/false status aayega
+        const { isAvailable } = req.body; 
         
-        // $set operator forcefully status toggle ko ensure karega
         const updatedUser = await User.findByIdAndUpdate(
             req.params.id,
             { $set: { isAvailable: isAvailable } },
@@ -110,13 +119,42 @@ router.put('/update-availability/:id', async (req, res) => {
     }
 });
 
-// ─── FIXED: ADMIN / FIND EXPERTS GET ALL PROVIDERS ROUTE ───
+// ─── UPDATE PROVIDER PAYOUT / BANKING DETAILS ───
+router.put('/update-payout/:id', async (req, res) => {
+    try {
+        const { walletType, bankName, accountTitle, accountNumber, mobileNumber } = req.body;
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.id,
+            { 
+                $set: { 
+                    walletType, 
+                    bankName, 
+                    accountTitle, 
+                    accountNumber,
+                    mobileNumber 
+                } 
+            },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedUser) return res.status(404).json({ message: "User not found" });
+
+        res.status(200).json({
+            message: "Payout details updated successfully!",
+            user: updatedUser
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// ─── ADMIN / FIND EXPERTS GET ALL PROVIDERS ROUTE ───
 router.get('/providers', async (req, res) => {
     try {
-        // Regex lagane se ab Capital 'Provider' aur lowercase 'provider' dono experts page par fetch ho kar aayenge!
         const providers = await User.find(
             { role: { $regex: /^provider$/i } }, 
-            'name email skill location isAvailable'
+            'name email skill location isAvailable walletType bankName accountTitle accountNumber mobileNumber'
         );
         res.status(200).json(providers);
     } catch (error) {
@@ -127,7 +165,7 @@ router.get('/providers', async (req, res) => {
 // ─── GOOGLE SIGN-IN / UP VERIFICATION ───
 router.post('/google-login', async (req, res) => {
   try {
-    const { name, email, role, skill, location } = req.body;
+    const { name, email, role, skill, location, walletType, bankName, accountTitle, accountNumber, mobileNumber } = req.body;
 
     let existingUser = await User.findOne({ email });
 
@@ -138,7 +176,12 @@ router.post('/google-login', async (req, res) => {
         role: role || 'Client', 
         location: role === 'Provider' ? location : undefined,
         skill: role === 'Provider' ? skill : null,
-        isAvailable: role === 'Provider' ? true : undefined
+        isAvailable: role === 'Provider' ? true : undefined,
+        walletType: role === 'Provider' ? (walletType || 'Direct Bank Transfer / Card') : undefined,
+        bankName: role === 'Provider' ? bankName : undefined,
+        accountTitle: role === 'Provider' ? accountTitle : undefined,
+        accountNumber: role === 'Provider' ? accountNumber : undefined,
+        mobileNumber: role === 'Provider' ? mobileNumber : undefined
       });
       await existingUser.save();
     }
@@ -152,7 +195,13 @@ router.post('/google-login', async (req, res) => {
         email: existingUser.email,
         role: existingUser.role,
         location: existingUser.location,
-        skill: existingUser.skill
+        skill: existingUser.skill,
+        isAvailable: existingUser.isAvailable,
+        walletType: existingUser.walletType,
+        bankName: existingUser.bankName,
+        accountTitle: existingUser.accountTitle,
+        accountNumber: existingUser.accountNumber,
+        mobileNumber: existingUser.mobileNumber
       }
     });
   } catch (error) {

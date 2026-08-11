@@ -9,7 +9,12 @@ const Register = () => {
     password: '', 
     role: 'Client', 
     skill: '',
-    location: '' 
+    location: '',
+    // Added Payment Information Fields for Providers
+    bankName: '',
+    accountTitle: '',
+    accountNumber: '',
+    walletType: 'EasyPaisa'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -19,7 +24,15 @@ const Register = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'role' && value === 'Client') {
-      setFormData({ ...formData, role: value, skill: '', location: '' });
+      setFormData({ 
+        ...formData, 
+        role: value, 
+        skill: '', 
+        location: '', 
+        bankName: '', 
+        accountTitle: '', 
+        accountNumber: '' 
+      });
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -37,6 +50,12 @@ const Register = () => {
 
     if (formData.role === 'Provider' && !formData.location.trim()) {
       setError('Please type your location!');
+      return;
+    }
+
+    // Validation for Provider Payment Info
+    if (formData.role === 'Provider' && (!formData.accountNumber.trim() || !formData.accountTitle.trim())) {
+      setError('Please provide your account title and number for payments!');
       return;
     }
 
@@ -82,7 +101,11 @@ const Register = () => {
             email: googleUser.email,
             role: formData.role,  
             skill: formData.skill,
-            location: formData.location 
+            location: formData.location,
+            bankName: formData.bankName,
+            accountTitle: formData.accountTitle,
+            accountNumber: formData.accountNumber,
+            walletType: formData.walletType
           }),
         });
 
@@ -110,7 +133,7 @@ const Register = () => {
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-[#F6FAFD] py-12 px-4 sm:px-6 lg:px-8 font-sans antialiased overflow-hidden">
       
-      {/* ANIMATED BACKGROUND GRAPHIC OVERLAY (MATCHED WITH LOGIN LIGHT PALETTE) */}
+      {/* ANIMATED BACKGROUND GRAPHIC OVERLAY */}
       <div className="absolute inset-0 z-0 opacity-40 pointer-events-none mix-blend-multiply scale-105 animate-pulse duration-[8000ms]">
         <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 800" fill="none">
           <path d="M-100 400 C 300 200, 400 600, 800 300 C 1200 100, 1100 700, 1600 400" stroke="url(#register-gradient)" strokeWidth="3" strokeDasharray="10 15" />
@@ -133,7 +156,7 @@ const Register = () => {
       <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-[#B3CFE5]/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
 
       {/* CARD CONTEXT AREA */}
-      <div className="relative max-w-md w-full space-y-6 bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-xl shadow-blue-900/5 border border-[#B3CFE5]/40 z-10">
+      <div className="relative max-w-md w-full space-y-6 bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-xl shadow-blue-900/5 border border-[#B3CFE5]/40 z-10 my-10">
         
         {/* BRAND IDENTITY */}
         <div className="text-center">
@@ -255,6 +278,65 @@ const Register = () => {
                   <option value="Home Shifting">Home Shifting</option>
                   <option value="Carpenter Services">Carpenter Services</option>
                 </select>
+              </div>
+
+              {/* NEW PAYMENT DETAILS SECTION FOR PROVIDER */}
+              <div className="border-t border-[#B3CFE5]/40 pt-3 space-y-3">
+                <p className="text-xs font-extrabold text-[#091F5C] uppercase tracking-wide">💳 Payout / Payment Details</p>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] font-bold text-[#4A7FA7] uppercase">Method / Wallet</label>
+                    <select 
+                      name="walletType"
+                      value={formData.walletType}
+                      onChange={handleChange}
+                      className="w-full mt-1 px-2.5 py-1.5 bg-white border border-[#B3CFE5] rounded-lg text-xs text-[#091F5C] font-medium"
+                    >
+                      <option value="EasyPaisa">EasyPaisa</option>
+                      <option value="JazzCash">JazzCash</option>
+                      <option value="Bank">Bank Account</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-[#4A7FA7] uppercase">Bank / Provider Name</label>
+                    <input 
+                      name="bankName"
+                      type="text"
+                      placeholder="e.g. HBL / Meezan"
+                      value={formData.bankName}
+                      onChange={handleChange}
+                      className="w-full mt-1 px-2.5 py-1.5 bg-white border border-[#B3CFE5] rounded-lg text-xs text-[#091F5C] font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-[#4A7FA7] uppercase">Account Title</label>
+                  <input 
+                    name="accountTitle"
+                    type="text"
+                    required={true}
+                    placeholder="Account Holder Name"
+                    value={formData.accountTitle}
+                    onChange={handleChange}
+                    className="w-full mt-1 px-2.5 py-1.5 bg-white border border-[#B3CFE5] rounded-lg text-xs text-[#091F5C] font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-[#4A7FA7] uppercase">Account / IBAN / Mobile Number</label>
+                  <input 
+                    name="accountNumber"
+                    type="text"
+                    required={true}
+                    placeholder="0300-1234567 or IBAN"
+                    value={formData.accountNumber}
+                    onChange={handleChange}
+                    className="w-full mt-1 px-2.5 py-1.5 bg-white border border-[#B3CFE5] rounded-lg text-xs text-[#091F5C] font-medium"
+                  />
+                </div>
               </div>
 
             </div>

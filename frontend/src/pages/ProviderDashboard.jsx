@@ -16,6 +16,15 @@ const ProviderDashboard = () => {
   const [providerId, setProviderId] = useState('');
   const [providerAddress, setProviderAddress] = useState('Sialkot, Punjab'); 
 
+  // ─── PAYOUT / BANKING STATES ───
+  const [bankName, setBankName] = useState('');
+  const [accountTitle, setAccountTitle] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [mobileNumber, setMobileNumber] = useState('');
+  const [walletType, setWalletType] = useState('Direct Bank Transfer / Card');
+  const [isEditingPayout, setIsEditingPayout] = useState(false);
+  const [payoutSuccess, setPayoutSuccess] = useState('');
+
   // ─── TAB NAVIGATION FILTER ENGINE ───
   const [activeTab, setActiveTab] = useState('Active'); 
   
@@ -34,6 +43,13 @@ const ProviderDashboard = () => {
     setProviderSkill(user.skill || ''); 
     setProviderAddress(user.address || user.location || 'Sialkot, Punjab'); 
     
+    // Load Payout Details (Fixed fallback to handle both mobileNumber and accountNumber)
+    setBankName(user.bankName || '');
+    setAccountTitle(user.accountTitle || '');
+    setAccountNumber(user.accountNumber || user.mobileNumber || '');
+    setMobileNumber(user.mobileNumber || user.accountNumber || '');
+    setWalletType(user.walletType || 'Direct Bank Transfer / Card');
+
     const currentStatus = user.isAvailable !== undefined ? user.isAvailable : true;
     setIsAvailable(currentStatus);
     
@@ -103,6 +119,37 @@ const ProviderDashboard = () => {
     }
   };
 
+  const handleUpdatePayout = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(`http://localhost:5000/api/auth/update-payout/${providerId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletType, bankName, accountTitle, accountNumber, mobileNumber }),
+      });
+
+      if (response.ok) {
+        const userJson = localStorage.getItem('user');
+        if (userJson) {
+          const user = JSON.parse(userJson);
+          user.walletType = walletType;
+          user.bankName = bankName;
+          user.accountTitle = accountTitle;
+          user.accountNumber = accountNumber;
+          user.mobileNumber = mobileNumber;
+          localStorage.setItem('user', JSON.stringify(user));
+        }
+        setPayoutSuccess('Payout details successfully updated!');
+        setIsEditingPayout(false);
+        setTimeout(() => setPayoutSuccess(''), 3000);
+      } else {
+        alert('Failed to update payout details.');
+      }
+    } catch (error) {
+      console.error("Payout update error:", error);
+    }
+  };
+
   const handleCompleteBooking = async (bookingId) => {
     try {
       const response = await fetch(`http://localhost:5000/api/bookings/update-status/${bookingId}`, {
@@ -114,7 +161,7 @@ const ProviderDashboard = () => {
       if (response.ok) {
         setAllBookings(prev => prev.map(b => (b._id === bookingId || b.id === bookingId) ? { ...b, status: 'Completed' } : b));
         setCompletedCount(prev => prev + 1);
-        alert(" Task successfully marked as Completed!");
+        alert("Task successfully marked as Completed!");
       } else {
         alert("Failed to update execution status.");
       }
@@ -226,6 +273,193 @@ const ProviderDashboard = () => {
           </div>
         </div>
 
+        {/* SUCCESS NOTIFICATION FOR PAYOUT */}
+        {payoutSuccess && (
+          <div className="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-700 p-3 rounded-xl text-xs font-bold text-center">
+            {payoutSuccess}
+          </div>
+        )}
+
+        {/* PAYOUT & BANKING PROFILE SECTION */}
+        <div className="mb-8 bg-white p-6 rounded-2xl border border-[#B3CFE5]/60 shadow-md">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-sm font-bold text-[#091F5C] uppercase tracking-wider flex items-center gap-2">
+              💳 Payout & Banking Details
+            </h3>
+            <button 
+              onClick={() => setIsEditingPayout(!isEditingPayout)}
+              className="px-3 py-1 bg-[#F6FAFD] hover:bg-blue-50 text-[#4A7FA7] hover:text-[#0A1931] border border-[#B3CFE5] rounded-lg text-xs font-bold transition"
+            >
+              {isEditingPayout ? "Cancel" : "Edit Payout Info"}
+            </button>
+          </div>
+
+          {!isEditingPayout ? (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs bg-[#F6FAFD] p-4 rounded-xl border border-[#B3CFE5]/40">
+              <div>
+                <span className="text-gray-400 font-semibold block uppercase">Payment Method</span>
+                <span className="font-bold text-[#091F5C] text-sm mt-0.5 block">{walletType || 'Not Set'}</span>
+              </div>
+              <div>
+                <span className="text-gray-400 font-semibold block uppercase">Account Title</span>
+                <span className="font-bold text-[#091F5C] text-sm mt-0.5 block">{accountTitle || 'Not Provided'}</span>
+              </div>
+              <div>
+                <span className="text-gray-400 font-semibold block uppercase">
+                  {walletType === 'EasyPaisa / JazzCash' ? 'Mobile Number' : 'Account Number / IBAN'}
+                </span>
+                <span className="font-bold text-[#091F5C] text-sm mt-0.5 block">
+                  {walletType === 'EasyPaisa / JazzCash' 
+                    ? (mobileNumber || accountNumber || 'Not Provided') 
+                    : (accountNumber || mobileNumber || 'Not Provided')}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleUpdatePayout} className="space-y-4 bg-[#F6FAFD] p-4 rounded-xl border border-[#B3CFE5]/60">
+              
+              {/* Checkout Style Payment Method Selectors */}
+              <div>
+                <label className="text-xs font-bold text-[#091F5C] uppercase block mb-2">Select Payout Method</label>
+                <div className="space-y-3">
+                  
+                  {/* Option 1: Direct Bank Transfer / Card */}
+                  <div 
+                    onClick={() => setWalletType('Direct Bank Transfer / Card')}
+                    className={`p-3.5 rounded-xl border cursor-pointer flex items-center justify-between transition-all ${
+                      walletType === 'Direct Bank Transfer / Card' 
+                        ? 'bg-blue-50/80 border-blue-500 ring-2 ring-blue-500/20' 
+                        : 'bg-white border-[#B3CFE5]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <input 
+                        type="radio" 
+                        name="payoutMethodOption" 
+                        checked={walletType === 'Direct Bank Transfer / Card'} 
+                        onChange={() => setWalletType('Direct Bank Transfer / Card')}
+                        className="accent-blue-600 w-4 h-4"
+                      />
+                      <span className="text-xs font-bold text-[#091F5C]">Direct Bank Transfer / Card</span>
+                    </div>
+                    <span className="text-[10px] font-extrabold bg-blue-100 text-blue-800 px-2 py-0.5 rounded tracking-wider">VISA MC</span>
+                  </div>
+
+                  {/* Option 2: EasyPaisa / JazzCash */}
+                  <div 
+                    onClick={() => setWalletType('EasyPaisa / JazzCash')}
+                    className={`p-3.5 rounded-xl border cursor-pointer flex items-center justify-between transition-all ${
+                      walletType === 'EasyPaisa / JazzCash' 
+                        ? 'bg-blue-50/80 border-blue-500 ring-2 ring-blue-500/20' 
+                        : 'bg-white border-[#B3CFE5]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <input 
+                        type="radio" 
+                        name="payoutMethodOption" 
+                        checked={walletType === 'EasyPaisa / JazzCash'} 
+                        onChange={() => setWalletType('EasyPaisa / JazzCash')}
+                        className="accent-blue-600 w-4 h-4"
+                      />
+                      <span className="text-xs font-bold text-[#091F5C]">EasyPaisa / JazzCash</span>
+                    </div>
+                    <span className="text-[10px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded tracking-wider">Wallet</span>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Dynamic Fields rendering based on selected payment type */}
+              {walletType === 'Direct Bank Transfer / Card' ? (
+                <div className="space-y-4 pt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-[#091F5C] uppercase block mb-1">Bank Name (e.g. HBL / Meezan)</label>
+                      <input 
+                        type="text"
+                        value={bankName}
+                        onChange={(e) => setBankName(e.target.value)}
+                        placeholder="HBL / Meezan"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#B3CFE5] rounded-xl text-xs font-medium text-[#091F5C] focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-[#091F5C] uppercase block mb-1">Account Title</label>
+                      <input 
+                        type="text"
+                        required={true}
+                        value={accountTitle}
+                        onChange={(e) => setAccountTitle(e.target.value)}
+                        placeholder="Account Holder Name"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#B3CFE5] rounded-xl text-xs font-medium text-[#091F5C] focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-[#091F5C] uppercase block mb-1">Bank Account Number / IBAN</label>
+                    <input 
+                      type="text"
+                      required={true}
+                      value={accountNumber}
+                      onChange={(e) => setAccountNumber(e.target.value)}
+                      placeholder="Account Number or IBAN"
+                      className="w-full px-3.5 py-2.5 bg-white border border-[#B3CFE5] rounded-xl text-xs font-medium text-[#091F5C] focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4 pt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-[#091F5C] uppercase block mb-1">Wallet Provider</label>
+                      <input 
+                        type="text"
+                        value={bankName}
+                        onChange={(e) => setBankName(e.target.value)}
+                        placeholder="EasyPaisa or JazzCash"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#B3CFE5] rounded-xl text-xs font-medium text-[#091F5C] focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-[#091F5C] uppercase block mb-1">Account Title</label>
+                      <input 
+                        type="text"
+                        required={true}
+                        value={accountTitle}
+                        onChange={(e) => setAccountTitle(e.target.value)}
+                        placeholder="Account Holder Name"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#B3CFE5] rounded-xl text-xs font-medium text-[#091F5C] focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-[#091F5C] uppercase block mb-1">Mobile Number (EasyPaisa / JazzCash)</label>
+                    <input 
+                      type="text"
+                      required={true}
+                      value={mobileNumber}
+                      onChange={(e) => {
+                        setMobileNumber(e.target.value);
+                        setAccountNumber(e.target.value); // Sync both to prevent mismatch
+                      }}
+                      placeholder="03xx-xxxxxxx"
+                      className="w-full px-3.5 py-2.5 bg-white border border-[#B3CFE5] rounded-xl text-xs font-medium text-[#091F5C] focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <button 
+                type="submit"
+                className="px-5 py-2.5 bg-[#0A1931] hover:bg-[#1A3D63] text-white rounded-xl text-xs font-bold transition shadow-md"
+              >
+                Save Payout Changes
+              </button>
+            </form>
+          )}
+        </div>
+
         {/* INTERACTIVE DATA TRACKING CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           
@@ -308,7 +542,7 @@ const ProviderDashboard = () => {
                 <tbody className="divide-y divide-[#B3CFE5]/30 text-sm font-medium text-[#091F5C]">
                   {filteredBookings.map((booking) => {
                     const totalAmt = Number(booking.totalAmount) || 0;
-                    const staffShare = Math.round(totalAmt * 0.80); // Provider/Staff 80% share calculation
+                    const staffShare = Math.round(totalAmt * 0.80);
 
                     return (
                       <tr key={booking._id || booking.id} className="hover:bg-[#F6FAFD]/60 transition-colors">
@@ -319,7 +553,6 @@ const ProviderDashboard = () => {
                           </div>
                         </td>
                         
-                        {/* Multi-Service Scope & Pricing / Payment Share Support */}
                         <td className="p-4">
                           <div className="flex flex-col gap-1">
                             {booking.services && Array.isArray(booking.services) && booking.services.length > 0 ? (
@@ -349,7 +582,6 @@ const ProviderDashboard = () => {
 
                         <td className="p-4 text-gray-600 font-normal">{booking.address}</td>
                         
-                        {/* Scheduled Date & Time Picker Format */}
                         <td className="p-4 text-gray-600 font-normal">
                           <div className="flex flex-col text-xs">
                             <span className="font-semibold">{booking.date ? new Date(booking.date).toLocaleDateString('en-GB') : 'Recent'}</span>
@@ -357,7 +589,6 @@ const ProviderDashboard = () => {
                           </div>
                         </td>
                         
-                        {/* Rating Column */}
                         <td className="p-4 text-center font-bold">
                           {booking.rating ? (
                             <span className="text-amber-500 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200 text-xs">

@@ -27,9 +27,9 @@ const userSchema = new mongoose.Schema({
     default: ''
   },
   isAvailable: {
-  type: Boolean,
-  default: true // Yeh naye users ke liye hamesha true set karega
-},
+    type: Boolean,
+    default: true // Yeh naye users ke liye hamesha true set karega
+  },
   // Provider specific fields
   // ─── FIXED: Changed from 'skills: [String]' to 'skill: String' to match frontend ───
   skill: {
@@ -43,7 +43,29 @@ const userSchema = new mongoose.Schema({
   rate: {
     type: Number,
     default: 0
+  },
+  // ─── PAYOUT & BANKING DETAILS FOR PROVIDERS ───
+  walletType: {
+    type: String,
+    default: 'Direct Bank Transfer / Card'
+  },
+  bankName: {
+    type: String,
+    default: ''
+  },
+  accountTitle: {
+    type: String,
+    default: ''
+  },
+  accountNumber: {
+    type: String,
+    default: ''
+  },
+  // ─── NEW ADDED FIELD FOR EASYPAISA / JAZZCASH ───
+  mobileNumber: {
+    type: String,
+    default: ''
   }
-}, { timestamps: true });
+}, { timestamps:true }); // Agar timestamps: true hai toh wahi rehne dein
 
 module.exports = mongoose.model('User', userSchema);
