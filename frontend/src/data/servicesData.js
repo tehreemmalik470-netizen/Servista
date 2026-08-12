@@ -11,7 +11,7 @@ export const servicesData = {
     ]
   },
   "electrician": {
-    title: "Electrician ",
+    title: "Electrician Services ",
     items: [
       { id: 7, name: "Breaker Replacement", price: 800, img: "/breaker replacement.jpg" },
       { id: 8, name: "Fan Installation", price: 700, img: "/fan installation.jpg",description: "- Price Per Fan x 700" },
@@ -33,55 +33,55 @@ export const servicesData = {
     ]
   },
   "painting&decor": {
-    title: "Paint Decor",
+    title: "Paint and Decor services",
     items: [
       { id: 19, name: " full house paint", price: 50000, img: "/full house paint.jpg" },
-      { id: 20, name: " 1 room paint", price: 3000, img: "/room paint.jpg" }
-      
+      { id: 20, name: " 1 room paint", price: 3000, img: "/room paint.jpg" },
+      { id: 21, name: "celling", price: 3000, img: "/celling.jpg",description: "- Price Per room/hall x 3000" }
    ]
   },
   "plumbing": {
-    title: "Plumbing",
+    title: "Plumbing Services",
     items: [
-      { id: 21, name: " water tap", price: 800, img: "/water tap.jpg",description: "- Price Per tap x 800" },
-      { id: 22, name: " Drained pipeline", price: 3000, img: "/drained pipeline.jpg" },
-      { id: 23, name: " dishwasher installation", price: 3000, img: "/dishwasher installation.jpg" },
-      { id: 24, name: " water motor system", price: 3500, img: "/electric motor.jpg" },
-      { id: 25, name: " water tank installation", price: 3200, img: "/water tank cleaning.jpg",description: "- Price Per water tank x 3200" }
+      { id: 22, name: " water tap", price: 800, img: "/water tap.jpg",description: "- Price Per tap x 800" },
+      { id: 23, name: " Drained pipeline", price: 3000, img: "/drained pipeline.jpg" },
+      { id: 24, name: " dishwasher installation", price: 3000, img: "/dishwasher installation.jpg" },
+      { id: 25, name: " water motor system", price: 3500, img: "/electric motor.jpg" },
+      { id: 26, name: " water tank installation", price: 3200, img: "/water tank cleaning.jpg",description: "- Price Per water tank x 3200" }
    ]
   },
   "solarinstallation": {
-    title: "Solar installation",
+    title: "Solar installation Services",
     items: [
-      { id: 26, name: " solar system installation ", price: 7800, img: "/solar installation.jpg" },
-      { id: 27, name: " solar activation", price: 5000, img: "/solar activation.jpg" }
+      { id: 27, name: " solar system installation ", price: 7800, img: "/solar installation.jpg" },
+      { id: 28, name: " solar activation", price: 5000, img: "/solar activation.jpg" }
    ]
   },
   "acrepairing": {
-    title: "AC Repairing",
+    title: "AC Repairing Services",
     items: [
-      { id: 28, name: "  AC installation ", price: 1800, img: "/ac installation.jpg",description: "- Price Per AC x 1800" },
-      { id: 29, name: "cleaning the evaporator and condenser coils", price: 2000, img: "/coils.jpg" },
-      { id: 30, name: "  Refrigerant(gas) refilling ", price:3500, img: "/Refrigerant(gas) refilling.jpg" }
+      { id: 29, name: "  AC installation ", price: 1800, img: "/ac installation.jpg",description: "- Price Per AC x 1800" },
+      { id: 30, name: "cleaning the evaporator and condenser coils", price: 2000, img: "/coils.jpg" },
+      { id: 31, name: "  Refrigerant(gas) refilling ", price:3500, img: "/Refrigerant(gas) refilling.jpg" }
    ]
   },
     "pestcontrol": {
-    title: "Pestcontrol",
+    title: "Pestcontrol Services",
     items: [
-      { id: 31, name: "  Dengue Spray ", price: 4800, img: "/Dengue Spray.jpg" },
-      { id: 32, name: " Disinfection Services", price: 4000, img: "/Disinfection Services.jpg" },
-      { id: 33, name: "  Termit control ", price: 2500, img: "/Termit control.jpg" },
-      { id: 34, name: " General fumigation   ", price:3500, img: "/General fumigation.jpg" },
-      { id: 35, name: " Cockroach Treatment  ", price:3500, img: "/Cockroach Treatment.jpg" }
+      { id: 32, name: "  Dengue Spray ", price: 4800, img: "/Dengue Spray.jpg" },
+      { id: 33, name: " Disinfection Services", price: 4000, img: "/Disinfection Services.jpg" },
+      { id: 34, name: "  Termit control ", price: 2500, img: "/Termit control.jpg" },
+      { id: 35, name: " General fumigation   ", price:3500, img: "/General fumigation.jpg" },
+      { id: 36, name: " Cockroach Treatment  ", price:3500, img: "/Cockroach Treatment.jpg" }
    ]
   },
   "homeshifting": {
-    title:"shifting",
+    title:"shifting Services",
     items: [
-      { id: 36, name: " Packing services", price:4800, img: "/Packing services.jpg" },
-      { id: 37, name: " Transportation Services", price: 4000, img: "/Transportation Services.jpg" },
-      { id: 38, name: "  unloading", price: 1500, img: "/unloading.jpg" },
-      { id: 39, name: " unpacking   ", price:800, img: "/unpacking.jpg" }
+      { id: 37, name: " Packing services", price:4800, img: "/Packing services.jpg" },
+      { id: 38, name: " Transportation Services", price: 4000, img: "/Transportation Services.jpg" },
+      { id: 39, name: "  unloading", price: 1500, img: "/unloading.jpg" },
+      { id: 40, name: " unpacking   ", price:800, img: "/unpacking.jpg" }
    ]
   }
 };

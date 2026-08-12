@@ -161,7 +161,7 @@ const Home = () => {
 {/* ─── SERVICES SECTION (DYNAMIC) ─── */}
       <section id="services" className="max-w-7xl mx-auto px-6 py-24 bg-white">
         <div className="text-center mb-16 space-y-4">
-          <h2 className="text-sm md:text-base font-black text-blue-600 uppercase tracking-[0.3em]">Our Expertise</h2>
+          <h2 className="text-lg md:text-xl font-black text-blue-600 uppercase tracking-[0.3em]">Our Expertise</h2>
           <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">Expert Services at <span className="text-blue-600">Your Doorstep</span></h3>
         </div>
 

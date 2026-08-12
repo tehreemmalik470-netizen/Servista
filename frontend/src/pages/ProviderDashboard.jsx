@@ -247,7 +247,7 @@ const ProviderDashboard = () => {
               <h1 className="text-2xl font-bold text-white tracking-tight">Welcome back, {providerName}!</h1>
               {providerSkill && (
                 <span className="px-2.5 py-0.5 bg-blue-900/40 text-blue-300 text-xs font-bold rounded-md border border-blue-800/50">
-                  🛠️ {providerSkill}
+                   {providerSkill}
                 </span>
               )}
             </div>
@@ -474,7 +474,7 @@ const ProviderDashboard = () => {
               <h3 className={`text-3xl font-black mt-1.5 ${activeTab === 'Active' ? 'text-white' : 'text-[#091F5C]'}`}>
                 {allBookings.filter(b => b.status?.toLowerCase() === 'approved' || b.status?.toLowerCase() === 'pending' || b.status?.toLowerCase() === 'active').length}
               </h3>
-              <span className={`text-[11px] font-medium mt-1 block ${activeTab === 'Active' ? 'text-blue-400' : 'text-[#4A7FA7]'}`}>Click to view pipeline stack</span>
+              <span className={`text-[11px] font-medium mt-1 block ${activeTab === 'Active' ? 'text-blue-400' : 'text-[#4A7FA7]'}`}>Click to view </span>
             </div>
             <div className="p-3 bg-[#F6FAFD] rounded-xl border border-[#B3CFE5]/40 text-lg shadow-sm">⏳</div>
           </div>
