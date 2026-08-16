@@ -216,7 +216,7 @@ const MyBookings = () => {
                     {booking.providerName ? (
                       <div className="space-y-3">
                         <p className="text-sm font-extrabold text-slate-800 flex items-center gap-1.5">
-                          🧑‍🔧 {booking.providerName}
+                        {booking.providerName}
                         </p>
                         <a href="https://wa.me/923001234567" target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black px-4 py-2 w-full rounded-xl shadow-sm transition-all tracking-wide">
                           💬 Chat on WhatsApp

@@ -8,7 +8,7 @@ router.get('/', async (req, res) => {
     const services = await Service.find({});
     res.status(200).json(services);
   } catch (error) {
-    res.status(500).json({ message: "Services fetch karne mein error aya", error: error.message });
+    res.status(500).json({ message: "Problem can be occur during services fetching", error: error.message });
   }
 });
 
@@ -18,9 +18,9 @@ router.post('/add', async (req, res) => {
     const { title, icon, desc, img } = req.body;
     const newService = new Service({ title, icon, desc, img });
     await newService.save();
-    res.status(201).json({ message: "Service successfully add ho gayi!", newService });
+    res.status(201).json({ message: "Service successfully added!", newService });
   } catch (error) {
-    res.status(500).json({ message: "Service add nahi ho saki", error: error.message });
+    res.status(500).json({ message: "Service not successfully added!S", error: error.message });
   }
 });
 

@@ -66,8 +66,8 @@ const Navbar = () => {
           <Link to="/about" className={`${location.pathname === '/about' ? 'text-blue-400 font-bold' : 'hover:text-white'} transition-colors`}>About</Link>
           <Link to="/contactUs" className={`${location.pathname === '/contactUs' ? 'text-blue-400 font-bold' : 'hover:text-white'} transition-colors`}>ContactUs</Link>
           
-          {/* MY CART - Sirf tab show hoga jab user ADMIN DASHBOARD par na ho */}
-          {!location.pathname.startsWith('/admin-dashboard') && (
+          {/* MY CART - Hidden for Admin and Providers */}
+          {!isAdmin && !isProvider && (
             <Link to="/cart" className="relative flex items-center gap-1 font-semibold text-slate-300 hover:text-blue-400 transition-colors">
               My Cart
               {cart && cart.length > 0 && (
